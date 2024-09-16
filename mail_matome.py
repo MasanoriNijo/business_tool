@@ -77,6 +77,17 @@ def extract_text_from_email(msg):
     return ""
 
 # テキストの内容を成型してデータ構造として保持する。
+def _buf_add_to_nippo(buf, nippo):
+    # 追加する。       
+    while len(buf) < 3:
+        buf.append("N")  
+    if buf[0] not in nippo:
+        nippo[buf[0]] = {}
+    if buf[1] not in nippo[buf[0]]:
+        nippo[buf[0]][buf[1]] = []
+    if buf[2] not in nippo[buf[0]][buf[1]]:
+        nippo[buf[0]][buf[1]].append(buf[2])
+
 def exchange_text_to_nippo(mailTxt, nippo = {}):
     mailTxts = []
     for item in mailTxt.split("\r\n"):
@@ -86,48 +97,43 @@ def exchange_text_to_nippo(mailTxt, nippo = {}):
     finRegex = "\d{4}年\d{1,2}月\d{1,2}日\([日月火水木金土]\) \d{2}:\d{2}" # 2024年9月12日(木) 10:43 二條正則 <masanori.nijo@s-cubism.jp>: のところで終わりにする。
     komokuRegexs = ["▼","・","→",finRegex]
     
-    startFlg = False
-    ind = 0
-    buf = []
+    startFlg = False # 記載対象が始まったらTrue
+    ind = 0 # 現在の位置
+    buf = [] # 一時的に保持
     for mltxt in mailTxts:
         if startFlg:
+            matchedFlg = False        
             for ind_ in range(4):
                 match = re.match("^" + komokuRegexs[ind_] + "(.*)",mltxt)
                 if match:
+                    matchedFlg = True        
                     if ind < ind_ and ind_ < 3:
                         buf.append(match[1])
                         ind += 1
+                    elif ind == ind_:
+                        # 追加する。       
+                        _buf_add_to_nippo(buf, nippo)
+                        # bufを戻す。
+                        buf.pop()
+                        buf.append(match[1])
                     elif ind_ < 3:
                         # 追加する。       
-                        if buf[0] not in nippo:
-                            nippo[buf[0]] = {}
-                        if buf[1] not in nippo[buf[0]]:
-                            nippo[buf[0]][buf[1]] = []
-                        if buf[2] not in nippo[buf[0]][buf[1]]:
-                            nippo[buf[0]][buf[1]].append(buf[2])
+                        _buf_add_to_nippo(buf, nippo)
                         # bufを戻す。
                         while ind >= ind_:
                             buf.pop()
                             ind -= 1
                         buf.append(match[1])
                         ind += 1
-                    else:
+                    else: # 追記対象の最後を感知した場合。
                         # 最後を追加する。そして処理を抜ける。
-                        while len(buf) < 3:
-                            buf.append("N")      
-                        if buf[0] not in nippo:
-                            nippo[buf[0]] = {}
-                        if buf[1] not in nippo[buf[0]]:
-                            nippo[buf[0]][buf[1]] = []
-                        if buf[2] not in nippo[buf[0]][buf[1]]:
-                            nippo[buf[0]][buf[1]].append(buf[2])   
+                        _buf_add_to_nippo(buf, nippo) 
                         return nippo
                     break
-            
-            # この場合は改行に内容が書かれている場合なので、追記する。
-            if ind == 2:
-                buf[ind] += mltxt
-        else:
+            if not matchedFlg:
+                # この場合は改行に内容が書かれている場合なので、追記する。
+                buf[-1] += mltxt
+        else: # 処理対象の始まりを判定する
             match = re.match("^" + komokuRegexs[0] + "(.*)",mltxt)
             if match:
                 startFlg = True
@@ -152,7 +158,8 @@ def exportDataRecursive(nippo, outTxt:str = '', lvl:int = 0):
     points = ['▼','・','→','','']
     if type(nippo) is dict:
         for key, value in nippo.items():
-            outTxt += '\n'
+            if lvl == 0:
+                outTxt += '\n'
             outTxt += points[lvl]
             outTxt += key
             outTxt += '\n'

@@ -6,6 +6,7 @@ import re
 from datetime import datetime, timedelta
 import sys
 import copy
+import subprocess
 
 # メールサーバに接続
 def connect_to_email_server(username, password, imap_server="imap.gmail.com"):
@@ -116,14 +117,14 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
                 if match:
                     matchedFlg = True        
                     if ind < ind_ and ind_ < 3:
-                        buf.append(match[1])
+                        buf.append(match[1].strip())
                         ind += 1
                     elif ind == ind_:
                         # 追加する。       
                         _buf_add_to_nippo(buf, nippo, date)
                         # bufを戻す。
                         buf.pop()
-                        buf.append(match[1])
+                        buf.append(match[1].strip())
                     elif ind_ < 3:
                         # 追加する。       
                         _buf_add_to_nippo(buf, nippo, date)
@@ -131,7 +132,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
                         while ind >= ind_:
                             buf.pop()
                             ind -= 1
-                        buf.append(match[1])
+                        buf.append(match[1].strip())
                         ind += 1
                     else: # 追記対象の最後を感知した場合。
                         # 最後を追加する。そして処理を抜ける。
@@ -145,7 +146,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
             match = re.match("^" + komokuRegexs[0] + "(.*)", mltxt)
             if match:
                 startFlg = True
-                buf.append(match[1])
+                buf.append(match[1].strip())
                 ind = 0
     return nippo
                 
@@ -162,10 +163,10 @@ def append_text_to_file(text, filename):
 
 # nippoデータをテキスト出力する。
 def exportDataRecursive(nippo, outTxt:str = '', lvl:int = 0):   
-    points = ['▼','・','→','','']
+    points = ['▼','・',' →','','']
     if type(nippo) is dict:
         for key, value in nippo.items():
-            if lvl == 0:
+            if lvl < 2:
                 outTxt += '\n'
             outTxt += points[lvl]
             outTxt += key
@@ -190,6 +191,22 @@ def ai_summarize_texts(texts, max_length=150):
 
 # メイン処理
 def main(username, password, keyword_regex, n_days_ago = 7):
+     
+    # echo コマンドを実行してファイルを空にする
+    command1 = ['bash', '-c', 'echo "" > nippou_xxx.txt']
+    # コマンドの実行
+    subprocess.run(command1, check=True)
+     
+    # echo コマンドを実行してファイルを空にする
+    command2 = ['bash', '-c', 'echo "" > nippou_all.txt']
+    # コマンドの実行
+    subprocess.run(command2, check=True)
+     
+    # echo コマンドを実行してファイルを空にする
+    command3 = ['bash', '-c', 'echo "" > nippou.txt']
+    # コマンドの実行
+    subprocess.run(command3, check=True)
+    
     # 1. メールサーバーに接続
     mail = connect_to_email_server(username, password)
     
@@ -205,10 +222,10 @@ def main(username, password, keyword_regex, n_days_ago = 7):
     for ind, extracted_text in enumerate(extracted_texts):
         dateRegex = ".*\d{4}/(\d{1,2}/\d{1,2}).*"
         date = ""
-        append_text_to_file(subjects[ind], "nippou_all.txt")
+        append_text_to_file("\n" + subjects[ind], "nippou_all.txt")
         match = re.match(dateRegex, subjects[ind])
         if match:
-            date = " (" + match[1] + ")"
+            date = " (" + match[1].strip() + ")"
         # append_text_to_file(extracted_text, "nippou.txt")
         nippo = exchange_text_to_nippo(extracted_text, nippo, date)
         nippoTxt = exportDataRecursive(nippo)

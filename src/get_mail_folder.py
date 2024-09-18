@@ -1,10 +1,14 @@
 import imaplib
 import ssl
+from config_reader import load_config
 
-IMAP_SERVER = "imap.gmail.com"
-IMAP_PORT = 993
-EMAIL_ACCOUNT = "masanori.nijo@s-cubism.jp"  # 自分のGmailアドレス
-PASSWORD = "11Me9900002"  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
+config = load_config()
+
+# GmailのIMAPサーバー情報
+IMAP_SERVER = config["IMAP_SERVER"]
+IMAP_PORT = config["IMAP_PORT"]
+EMAIL_ACCOUNT = config["EMAIL_ACCOUNT"]  # 自分のGmailアドレス
+PASSWORD = config["PASSWORD"]  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
 
 def list_folders():
     try:

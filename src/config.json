@@ -2,5 +2,9 @@
     "IMAP_SERVER" : "imap.gmail.com",
     "IMAP_PORT" : 993,
     "EMAIL_ACCOUNT" : "masanori.nijo@s-cubism.jp", 
-    "PASSWORD" : "11Me9900002"
+    "PASSWORD" : "11Me9900002",
+    "SRC_TO_OUT_PATH" : "../out",
+    "SRC_TO_IN_PATH" : "../in",
+    "NIPPO_MATOME_FILE" : "nippo_matome.txt",
+    "NIPPO_ALL_FILE" : "nippo_all.txt"
 }

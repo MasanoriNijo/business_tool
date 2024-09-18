@@ -8,6 +8,9 @@ import sys
 import copy
 import subprocess
 
+from config_reader import load_config
+config = load_config()
+
 # メールサーバに接続
 def connect_to_email_server(username, password, imap_server="imap.gmail.com"):
     mail = imaplib.IMAP4_SSL(imap_server)
@@ -111,7 +114,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
     for mltxt in mailTxts:
         if startFlg:
             matchedFlg = False
-            append_text_to_file(mltxt, "nippou_all.txt")        
+            append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")      
             for ind_ in range(4):
                 match = re.match("^" + komokuRegexs[ind_] + "(.*)",mltxt)
                 if match:
@@ -192,18 +195,18 @@ def ai_summarize_texts(texts, max_length=150):
 # メイン処理
 def main(username, password, keyword_regex, n_days_ago = 7):
      
-    # echo コマンドを実行してファイルを空にする
-    command1 = ['bash', '-c', 'echo "" > nippou_xxx.txt']
-    # コマンドの実行
-    subprocess.run(command1, check=True)
+    # # echo コマンドを実行してファイルを空にする
+    # command1 = ['bash', '-c', 'echo "" > nippou_xxx.txt']
+    # # コマンドの実行
+    # subprocess.run(command1, check=True)
      
     # echo コマンドを実行してファイルを空にする
-    command2 = ['bash', '-c', 'echo "" > nippou_all.txt']
+    command2 = ['bash', '-c', 'echo "" > ../out/nippo_all.txt']
     # コマンドの実行
     subprocess.run(command2, check=True)
      
     # echo コマンドを実行してファイルを空にする
-    command3 = ['bash', '-c', 'echo "" > nippou.txt']
+    command3 = ['bash', '-c', 'echo "" > ../out/nippo_matome.txt']
     # コマンドの実行
     subprocess.run(command3, check=True)
     
@@ -222,7 +225,7 @@ def main(username, password, keyword_regex, n_days_ago = 7):
     for ind, extracted_text in enumerate(extracted_texts):
         dateRegex = ".*\d{4}/(\d{1,2}/\d{1,2}).*"
         date = ""
-        append_text_to_file("\n" + subjects[ind], "nippou_all.txt")
+        append_text_to_file("\n" + subjects[ind], f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")
         match = re.match(dateRegex, subjects[ind])
         if match:
             date = " (" + match[1].strip() + ")"
@@ -230,11 +233,11 @@ def main(username, password, keyword_regex, n_days_ago = 7):
         nippo = exchange_text_to_nippo(extracted_text, nippo, date)
         nippoTxt = exportDataRecursive(nippo)
         subjects[ind]
-        append_text_to_file(subjects[ind], "nippou_xxx.txt")
-        append_text_to_file(nippoTxt, "nippou_xxx.txt")
+        # append_text_to_file(subjects[ind], "nippou_xxx.txt")
+        # append_text_to_file(nippoTxt, "nippou_xxx.txt")
         
     nippoTxt = exportDataRecursive(nippo)
-    append_text_to_file(nippoTxt, "nippou.txt")
+    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_MATOME_FILE']}")
     
     # 4. 抽出されたテキストをAIでまとめる
     # ai_summary = ai_summarize_texts(extracted_texts)
@@ -243,8 +246,8 @@ def main(username, password, keyword_regex, n_days_ago = 7):
 
 if __name__ == "__main__":
     # Gmailのユーザ名とアプリパスワード（Googleで2段階認証が有効の場合に必要）
-    username = "masanori.nijo@s-cubism.jp"
-    password = "11Me9900002"
+    username = config["EMAIL_ACCOUNT"]
+    password = config["PASSWORD"]
     
     # 件名のフィルタリングキーワード（正規表現）
     keyword_regex = "^Re: 【勤怠連絡】.*"

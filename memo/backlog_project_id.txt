@@ -1,0 +1,14 @@
+
+backlog.pyの引数に必要なbacklog_id配下のように取得
+各バックログのサイトのホーム画面の設定を開き、左下のプロジェクト設定をクリック。
+画面遷移するので、遷移先のURL（以下のような）のprojectIdがその値になります。
+https://s-cubism.backlog.jp/ViewPermission.action?projectId=131529
+
+
+各プロジェクトのprojectId
+MANDC_UKETORI:131529
+MANDC_UKETORI_INNER:131247
+AEONPET_POS_CS:115673
+ISHIBASHI_ZENTAI:55351
+
+

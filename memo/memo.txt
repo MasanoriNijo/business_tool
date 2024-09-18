@@ -1,0 +1,23 @@
+
+日報作成ツール実行手順
+
+1,業務開始時
+$ cd src
+$ python3 nippo_gen.py
+Gmailの下書きに当日の始業開始メールの下書きが作成されます。
+
+2,日報確認
+$ python3 nippo_matome.py N  // Nは任意の日付対象をN日前までさかのぼって集計
+out\nippo_matome.txtとout\nippo_all.txtに結果が出力されます。
+
+3,バックログの更新情報を取得
+$ python3 backlog.py project_ids=131529,131247,115673,55351 // 引数に指定したproject_idのバックログの当日の更新情報を取得.
+out\backlog_summary.txtに結果を出力
+
+※任意の日付までさかのぼって情報を取得したい場合は、以下の通り
+$ python3 backlog.py project_ids=131529,131247,115673,55351 target_date=2024-09-11　// この場合は、2024-09-11以降に更新された情報を表示。
+
+　　
+
+
+

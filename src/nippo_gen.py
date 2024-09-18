@@ -5,12 +5,15 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import ssl
 import pytz
+from config_reader import load_config
+
+config = load_config()
 
 # GmailのIMAPサーバー情報
-IMAP_SERVER = "imap.gmail.com"
-IMAP_PORT = 993
-EMAIL_ACCOUNT = "masanori.nijo@s-cubism.jp"  # 自分のGmailアドレス
-PASSWORD = "11Me9900002"  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
+IMAP_SERVER = config["IMAP_SERVER"]
+IMAP_PORT = config["IMAP_PORT"]
+EMAIL_ACCOUNT = config["EMAIL_ACCOUNT"]  # 自分のGmailアドレス
+PASSWORD = config["PASSWORD"]  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
 
 def create_draft(subject, body):
     """Gmailに下書きを作成する関数"""
@@ -74,9 +77,11 @@ def main():
     current_date = now.strftime(f"%Y/%m/%d {get_japanese_weekday(now)}")
     current_time = now.strftime("%H:%M")
     subject = f"【勤怠連絡】{current_date} 二條 リモート"
-    body = f"\n本日の業務を開始します。\n\n開始 {current_time} -"
+    body = f"\n本日の業務を開始します。\n\n開始 {current_time} -\n\n\n\n\n▼その他\nチケット発生都度対応"
     
     create_draft(subject, body)
 
 if __name__ == "__main__":
     main()
+
+# python3 nippo_gen.py

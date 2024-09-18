@@ -79,7 +79,7 @@ def utc_to_jst(utc_time_str):
 
 # 要約をファイルに出力する関数
 def save_summaries_to_file(summaries, output_file):
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, 'a', encoding='utf-8') as f:
         for ticket_key, summary in summaries.items():
             f.write(f"・{ticket_key} {summary['summary']}\n")
             f.write(f"https://s-cubism.backlog.jp/view/{ticket_key}\n")

@@ -182,13 +182,15 @@ def exportDataRecursive(nippo, outTxt:str = '', lvl:int = 0):
                 outTxt += '\n'
             outTxt += points[lvl]
             outTxt += key
-            outTxt += '\n'
+            if lvl > 0:
+                outTxt += '\n'
             outTxt = exportDataRecursive(value, outTxt, lvl + 1)
     elif type(nippo) is list:
         for value in nippo:
-            outTxt += points[lvl]
-            outTxt += value
-            outTxt += '\n'
+            if value != "N":
+                outTxt += points[lvl]
+                outTxt += value
+                outTxt += '\n'
     return outTxt
 
 # AI要約用の関数
@@ -201,6 +203,29 @@ def ai_summarize_texts(texts, max_length=150):
     
     return summary[0]['summary_text']
 
+from datetime import datetime
+
+# 指定の日付x月y日が今日から何日前かを計算 
+def days_ago(x, y, same_year = True, endFlg = False):
+    # 今日の日付
+    today = datetime.today()
+
+    # 今年のx月y日を取得
+    if same_year:
+        input_date = datetime(today.year, x, y)
+    else:
+        input_date = datetime(today.year - 1, x, y)
+
+    # 今日の日付との差を計算
+    delta = today - input_date
+
+    # 結果を表示
+    if delta.days >= 0 or endFlg:
+        return delta.days
+    
+    # 年をまたいでいるので再度計算
+    return days_ago(x, y, False, True)
+    
 # メイン処理
 def main(username, password):
      
@@ -233,8 +258,14 @@ def main(username, password):
     nippo = exchange_text_to_nippo(shuho_text, nippo)
 
     # 4. 日報を取得
+    
     keyword_regex = "^Re: 【勤怠連絡】.*"
     n_days_ago = 7 # 前回の週報の作成日から本日までの日数、便宜上7(一週間前)
+    
+    shuhoSubjectRegex = "^【週報】\d{1,2}月第\d週 \S+ \d{1,2}月\d{1,2}日\(.\)～(\d{1,2})月(\d{1,2})日\(.\) 週報$"
+    match = re.match(shuhoSubjectRegex,subject[0]) # 【週報】9月第2週 二條 9月6日(金)～9月12日(木) 週報
+    if match:
+        n_days_ago = days_ago(int(match[1]),int(match[2]))
     nippo_emails = filter_emails_by_subject(mail, n_days_ago, folder = sent_folder , keyword_regex = keyword_regex)
     
     # 5. フィルタされた日報メールの本文を抽出

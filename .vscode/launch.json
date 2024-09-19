@@ -2,10 +2,19 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Debug",
+            "name": "backlog.py",
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/src/backlog.py",  // デバッグの起点となるメインファイル
+            "console": "integratedTerminal",
+            "justMyCode": true,
+           "args": ["project_ids=131529,131247,115673,55351"]  // コマンドライン引数などを必要に応じて指定
+        },
+        {
+            "name": "shuho_gen.py",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/shuho_gen.py",  // デバッグの起点となるメインファイル
             "console": "integratedTerminal",
             "justMyCode": true,
            "args": ["project_ids=131529,131247,115673,55351"]  // コマンドライン引数などを必要に応じて指定

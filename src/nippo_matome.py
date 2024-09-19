@@ -173,7 +173,8 @@ def exportDataRecursive(nippo, outTxt:str = '', lvl:int = 0):
                 outTxt += '\n'
             outTxt += points[lvl]
             outTxt += key
-            outTxt += '\n'
+            if lvl > 0:
+                outTxt += '\n'
             outTxt = exportDataRecursive(value, outTxt, lvl + 1)
     elif type(nippo) is list:
         for value in nippo:

@@ -235,6 +235,44 @@ def days_ago(x, y, same_year = True, endFlg = False):
     return days_ago(x, y, False, True)
 
 def create_draft(subject, body, pattern):
+    """Gmailに下書きを作成する関数"""
+    
+    # メールの作成
+    msg = MIMEMultipart()
+    msg['From'] = EMAIL_ACCOUNT
+    msg['To'] = ''  # 宛先
+    msg['Subject'] = subject
+
+    # メール本文を追加
+    msg.attach(MIMEText(body, 'plain'))
+
+    # メールをIMAPサーバに送信
+    try:
+        # SSLコンテキストを作成してIMAPサーバに接続
+        context = ssl.create_default_context()
+        with imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT, ssl_context=context) as mail:
+            mail.login(EMAIL_ACCOUNT, PASSWORD)
+            mail.select('inbox')  # 'inbox'フォルダを選択（必要に応じて変更）
+
+            # メールデータの変換
+            raw_message = msg.as_string()
+            
+            # タイムゾーンを含んだ現在日時（aware datetime）
+            tz = pytz.timezone('Asia/Tokyo')  # 自分のタイムゾーンに合わせて変更
+            now = datetime.now(tz)
+
+            # 下書きフォルダに保存
+            result = mail.append('[Gmail]/&Tgtm+DBN-', '\\Draft', imaplib.Time2Internaldate(now), raw_message.encode('utf-8'))
+                
+            if result[0] == 'OK':
+                print("下書きを作成しました")
+            else:
+                print(f"下書きの作成に失敗しました: {result}")
+
+    except Exception as e:
+        print(f"エラーが発生しました: {e}")
+        
+def create_draft_html(subject, body, pattern):
  
     # メールの作成
     msg = MIMEMultipart()

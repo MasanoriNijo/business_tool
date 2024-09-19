@@ -367,12 +367,14 @@ def main(username, password):
     n_days_ago = 30 # 直近の週報1件のみだが、便宜上30日前まで
     shuho_email_last = filter_emails_by_subject(mail, n_days_ago, folder = sent_folder, keyword_regex = keyword_regex, is_newest_first=True,max_cnt=1)
     subject = shuho_email_last[1]
+    
     print(subject)
     append_text_to_file(subject[0], f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")
     
     # 3. 前回の週報の本文を抽出
     shuho_text = extract_text_from_email(shuho_email_last[0][0])
-    nippo = exchange_text_to_nippo(shuho_text, nippo)
+    fin_regex = "〇BackLog実績" # "〇BackLog実績"のところで終わりにする。
+    nippo = exchange_text_to_nippo(shuho_text, nippo, "", fin_regex)
 
     # 4. 日報を取得
     
@@ -413,7 +415,7 @@ def main(username, password):
     before_date = before.strftime(f"%m月%d日({get_japanese_weekday(before)})")
     
     subject = f"【週報】{current_month}月第X週 二條 {before_date}～{current_date} 週報"
-    body = f"\n今週の週報を送付します。\n〇トピックス\n・特になし\n\n〇案件状況報告\n{nippoTxt}\n〇BackLog実績\n"
+    body = f"\n今週の週報を送付します。\n\n〇トピックス\n・特になし\n\n〇案件状況報告\n{nippoTxt}\n〇BackLog実績\n"
     red_pattern = r"→.*@@@"
     create_draft(subject, body, red_pattern)
 

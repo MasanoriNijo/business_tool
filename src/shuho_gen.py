@@ -344,7 +344,7 @@ def get_japanese_weekday(date):
 
     
 # メイン処理
-def main(username, password):
+def main(username, password, draftMade):
      
     command2 = ['bash', '-c', 'echo "" > C:/Users/masanori.nijo/Documents/chatGpt/out/nippo_all.txt']
     # コマンドの実行
@@ -406,6 +406,10 @@ def main(username, password):
     nippoTxt = exportDataRecursive(nippo)
     append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_MATOME_FILE']}")
     
+    if draftMade == 0:
+        print("Text出力しました。")
+        sys.exit()
+    
     # 6.Gmailの下書きの保存
     # 現在の日付時刻を取得して件名に反映
     now = datetime.now()
@@ -424,9 +428,14 @@ if __name__ == "__main__":
     username = config["EMAIL_ACCOUNT"]
     password = config["PASSWORD"]
     
+    draftMade = 0
+    if len(sys.argv) > 1:
+        # 最初の要素はスクリプト名なので、それ以降を取得
+        draftMade  = sys.argv[1]
+    
     # 実行
-    main(username, password)
+    main(username, password, draftMade)
     
 # 使い方
-# python3 shuho_gen.py
+# python3 shuho_gen.py 1 // 引数の1を加えた場合、Gmailの下書きに格納。
  

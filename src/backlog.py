@@ -10,12 +10,12 @@ config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/config.json")
 API_KEY = config["BACKLOG_API_KEY"]
 BACKLOG_SPACE = config["BACKLOG_SPACE"] 
 PROJECT_KEY = config["PROJECT_KEY"] 
-PROJECT_ID = config["PROJECT_ID"] 
+PROJECT_IDS = config["PROJECT_IDS"] 
 
 project_ids = []
 
 # チケットを取得する関数
-def fetch_backlog_tickets(date=None, project_id=PROJECT_ID):
+def fetch_backlog_tickets(date=None, project_id=111):
     if date is None:
         date = datetime.now().strftime('%Y-%m-%d')
     url = f"https://{BACKLOG_SPACE}.backlog.jp/api/v2/issues"
@@ -88,7 +88,7 @@ def save_summaries_to_file(summaries, output_file):
                 f.write(f"  {comment}:\n")
                 
 # メイン関数
-def main(output_file="C:/Users/masanori.nijo/Documents/chatGpt/out/backlog_summary.txt", target_date=None, project_ids = [PROJECT_ID]):
+def main(output_file="C:/Users/masanori.nijo/Documents/chatGpt/out/backlog_summary.txt", target_date=None, project_ids = PROJECT_IDS):
      
     # echo コマンドを実行してファイルを空にする
     command2 = ['bash', '-c', f"echo '' > {output_file}"]
@@ -135,7 +135,7 @@ if __name__ == "__main__":
     if "project_ids" in variables.keys():
         project_ids = variables["project_ids"].split(',')
     else:
-        project_ids = [PROJECT_ID]
+        project_ids = PROJECT_IDS
  
     # print(project_ids)
     print(target_date)

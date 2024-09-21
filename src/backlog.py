@@ -9,7 +9,6 @@ config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/config.json")
 # BacklogのAPI設定
 API_KEY = config["BACKLOG_API_KEY"]
 BACKLOG_SPACE = config["BACKLOG_SPACE"] 
-PROJECT_KEY = config["PROJECT_KEY"] 
 PROJECT_DICT = config["PROJECT_DICT"] 
 
 project_ids = []
@@ -95,16 +94,21 @@ def save_text_to_file(txt, output_file):
 # 辞書のkey,valueを入れ替える
 def invert_dict(input_dict):
     inverted_dict = {}
-    
+
     # キーと値を入れ替え、重複する値はリストに追加
     for key, value in input_dict.items():
-        if value not in inverted_dict:
-            inverted_dict[value] = []
-        inverted_dict[value].append(key)
+        # キーと値をUTF-8でエンコードして扱う
+        encoded_key = key.encode('utf-8')
+        encoded_value = str(value).encode('utf-8')
+        
+        if encoded_value not in inverted_dict:
+            inverted_dict[encoded_value] = []
+        
+        inverted_dict[encoded_value].append(encoded_key)
     
     # 辞書を昇順に並べ替え
-    sorted_inverted_dict = {k: inverted_dict[k] for k in sorted(inverted_dict)}
-    
+    sorted_inverted_dict = {k.decode('utf-8'): [v.decode('utf-8') for v in inverted_dict[k]] for k in sorted(inverted_dict)}
+
     return sorted_inverted_dict
 
 # メイン関数
@@ -132,12 +136,12 @@ def main(output_file="C:/Users/masanori.nijo/Documents/chatGpt/out/backlog_summa
             save_summaries_to_file(summaries, output_file)
     
     else:
-        for name, projectIds in PROJECT_DICT.items():
+        projects = invert_dict(PROJECT_DICT)
+        for name, projectIds in projects.items():
             save_text_to_file(f"▼{name}", output_file)
             for project_id in projectIds:
                 # 1. 指定の日付
-                tickets = fetch_backlog_tickets(date=target_date, project_id=project_id)
-                
+                tickets = fetch_backlog_tickets(date=target_date, project_id=project_id)               
                 if not tickets:
                     print(f"{name}(project_id:{project_id}) No tickets found for the specified date:{target_date}")
                     continue

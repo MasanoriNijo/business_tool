@@ -10,7 +10,7 @@ config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/config.json")
 API_KEY = config["BACKLOG_API_KEY"]
 BACKLOG_SPACE = config["BACKLOG_SPACE"] 
 PROJECT_KEY = config["PROJECT_KEY"] 
-PROJECT_IDS = config["PROJECT_IDS"] 
+PROJECT_DICT = config["PROJECT_DICT"] 
 
 project_ids = []
 
@@ -86,28 +86,68 @@ def save_summaries_to_file(summaries, output_file):
             for date, comment in summary['comments'].items():
                 f.write(f" {date}:\n")
                 f.write(f"  {comment}:\n")
-                
+
+# TXTをファイルに出力する関数
+def save_text_to_file(txt, output_file):
+    with open(output_file, 'a', encoding='utf-8') as f:
+        f.write(f"{txt}\n")
+
+# 辞書のkey,valueを入れ替える
+def invert_dict(input_dict):
+    inverted_dict = {}
+    
+    # キーと値を入れ替え、重複する値はリストに追加
+    for key, value in input_dict.items():
+        if value not in inverted_dict:
+            inverted_dict[value] = []
+        inverted_dict[value].append(key)
+    
+    # 辞書を昇順に並べ替え
+    sorted_inverted_dict = {k: inverted_dict[k] for k in sorted(inverted_dict)}
+    
+    return sorted_inverted_dict
+
 # メイン関数
-def main(output_file="C:/Users/masanori.nijo/Documents/chatGpt/out/backlog_summary.txt", target_date=None, project_ids = PROJECT_IDS):
+def main(output_file="C:/Users/masanori.nijo/Documents/chatGpt/out/backlog_summary.txt", target_date=None, project_ids = []):
      
     # echo コマンドを実行してファイルを空にする
     command2 = ['bash', '-c', f"echo '' > {output_file}"]
     # コマンドの実行
     subprocess.run(command2, check=True)
 
-    for project_id in project_ids:
-        # 1. 指定の日付（または今日）でチケットを取得
-        tickets = fetch_backlog_tickets(date=target_date, project_id=project_id)
+    # 引数にproject_idsの指定の有無で場合分け
+    if len(project_ids):
+        for project_id in project_ids:
+            # 1. 指定の日付
+            tickets = fetch_backlog_tickets(date=target_date, project_id=project_id)
+            
+            if not tickets:
+                print(f"project_id:{project_id} No tickets found for the specified date:{target_date}")
+                continue
+
+            # 2. チケットの要約を生成
+            summaries = summarize_tickets(tickets, target_date)
+
+            # 3. テキストファイルに出力
+            save_summaries_to_file(summaries, output_file)
+    
+    else:
+        for name, projectIds in PROJECT_DICT.items():
+            save_text_to_file(f"▼{name}", output_file)
+            for project_id in projectIds:
+                # 1. 指定の日付
+                tickets = fetch_backlog_tickets(date=target_date, project_id=project_id)
+                
+                if not tickets:
+                    print(f"{name}(project_id:{project_id}) No tickets found for the specified date:{target_date}")
+                    continue
+
+                # 2. チケットの要約を生成
+                summaries = summarize_tickets(tickets, target_date)
+
+                # 3. テキストファイルに出力
+                save_summaries_to_file(summaries, output_file)
         
-        if not tickets:
-            print(f"project_id:{project_id} No tickets found for the specified date:{target_date}")
-            continue
-
-        # 2. チケットの要約を生成
-        summaries = summarize_tickets(tickets, target_date)
-
-        # 3. テキストファイルに出力
-        save_summaries_to_file(summaries, output_file)
     
     print(f"Summaries saved to {output_file}")
 
@@ -118,7 +158,11 @@ if __name__ == "__main__":
 
     # 引数の処理（例: 引数が key=value 形式で渡されたと仮定）
     variables = {}
+
     for arg in args:
+        if "=" not in arg:
+            print("引数は、project_ids=131529,131247,115673,55351 (target_date=2024-09-18 output_file=../out/backlog_summary.txt))の形式になります。")
+            sys.exit()
         key, value = arg.split('=')
         variables[key] = value
    
@@ -134,8 +178,7 @@ if __name__ == "__main__":
         
     if "project_ids" in variables.keys():
         project_ids = variables["project_ids"].split(',')
-    else:
-        project_ids = PROJECT_IDS
+
  
     # print(project_ids)
     print(target_date)

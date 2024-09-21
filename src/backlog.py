@@ -83,8 +83,9 @@ def save_summaries_to_file(summaries, output_file):
             f.write(f"・{ticket_key} {summary['summary']}\n")
             f.write(f"  https://s-cubism.backlog.jp/view/{ticket_key}\n")
             for date, comment in summary['comments'].items():
-                f.write(f" →{date}:\n")
+                f.write(f"{' ' *3}→{date}:\n")
                 f.write(f"{indent_text(remove_empty_lines(comment),4)}\n")
+            f.write(f"\n")
 
 # TXTをファイルに出力する関数
 def save_text_to_file(txt, output_file):

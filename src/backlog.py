@@ -78,18 +78,42 @@ def utc_to_jst(utc_time_str):
 
 # 要約をファイルに出力する関数
 def save_summaries_to_file(summaries, output_file):
-    with open(output_file, 'a', encoding='utf-8') as f:
+    with open(output_file, 'a', encoding='utf_8') as f:
         for ticket_key, summary in summaries.items():
             f.write(f"・{ticket_key} {summary['summary']}\n")
-            f.write(f"https://s-cubism.backlog.jp/view/{ticket_key}\n")
+            f.write(f"  https://s-cubism.backlog.jp/view/{ticket_key}\n")
             for date, comment in summary['comments'].items():
-                f.write(f" {date}:\n")
-                f.write(f"  {comment}:\n")
+                f.write(f" →{date}:\n")
+                f.write(f"{indent_text(remove_empty_lines(comment),4)}\n")
 
 # TXTをファイルに出力する関数
 def save_text_to_file(txt, output_file):
-    with open(output_file, 'a', encoding='utf-8') as f:
+    with open(output_file, 'a', encoding='utf_8') as f:
         f.write(f"{txt}\n")
+
+# textを全行指定の文字数だけ字下げする。
+def indent_text(text, indent_spaces):
+    # 指定した文字数分のスペースを作成
+    indent = ' ' * indent_spaces
+    
+    if not bool(text):
+        return indent
+    
+    # 各行に字下げを適用
+    indented_text = '\n'.join([indent + line for line in text.split('\n')])
+    
+    return indented_text
+
+# 引数に指定されたテキストから空行やスペースのみの行を削除
+def remove_empty_lines(text):
+    if not bool(text):
+        return ""
+    # 各行について、空白文字だけの行や完全に空の行を除外して新しいリストを作成
+    lines = text.splitlines()
+    filtered_lines = [line for line in lines if line.strip()]
+    
+    # フィルタリング後の行を再度結合して返す
+    return "\n".join(filtered_lines)
 
 # 辞書のkey,valueを入れ替える
 def invert_dict(input_dict):
@@ -97,9 +121,9 @@ def invert_dict(input_dict):
 
     # キーと値を入れ替え、重複する値はリストに追加
     for key, value in input_dict.items():
-        # キーと値をUTF-8でエンコードして扱う
-        encoded_key = key.encode('utf-8')
-        encoded_value = str(value).encode('utf-8')
+        # キーと値をutf_8でエンコードして扱う
+        encoded_key = key.encode('utf_8')
+        encoded_value = str(value).encode('utf_8')
         
         if encoded_value not in inverted_dict:
             inverted_dict[encoded_value] = []
@@ -107,7 +131,7 @@ def invert_dict(input_dict):
         inverted_dict[encoded_value].append(encoded_key)
     
     # 辞書を昇順に並べ替え
-    sorted_inverted_dict = {k.decode('utf-8'): [v.decode('utf-8') for v in inverted_dict[k]] for k in sorted(inverted_dict)}
+    sorted_inverted_dict = {k.decode('utf_8'): [v.decode('utf_8') for v in inverted_dict[k]] for k in sorted(inverted_dict)}
 
     return sorted_inverted_dict
 
@@ -151,6 +175,7 @@ def main(output_file="C:/Users/masanori.nijo/Documents/chatGpt/out/backlog_summa
 
                 # 3. テキストファイルに出力
                 save_summaries_to_file(summaries, output_file)
+            save_text_to_file(f"", output_file)
         
     
     print(f"Summaries saved to {output_file}")
@@ -188,6 +213,7 @@ if __name__ == "__main__":
     print(target_date)
     main(output_file=output_file, target_date=target_date, project_ids = project_ids)
     
+# python3 backlog.py target_date=2024-09-18
 # python3 backlog.py project_ids=131529,131247,115673,55351 (target_date=2024-09-18 output_file=../out/backlog_summary.txt)
 
 # MANDC_UKETORI:131529

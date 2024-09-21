@@ -8,7 +8,7 @@
             "program": "${workspaceFolder}/src/backlog.py",  // デバッグの起点となるメインファイル
             "console": "integratedTerminal",
             "justMyCode": true,
-           "args": ["project_ids=131529,131247,115673,55351"]  // コマンドライン引数などを必要に応じて指定
+           "args": ["target_date=2024-09-18"]  // コマンドライン引数などを必要に応じて指定
         },
         {
             "name": "shuho_gen.py",

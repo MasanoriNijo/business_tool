@@ -191,10 +191,15 @@ if __name__ == "__main__":
 
     for arg in args:
         if "=" not in arg:
-            print("引数は、project_ids=131529,131247,115673,55351 (target_date=2024-09-18 output_file=../out/backlog_summary.txt))の形式になります。")
-            sys.exit()
-        key, value = arg.split('=')
-        variables[key] = value
+            if arg.isdigit():
+                target_date_ = (datetime.now()-timedelta(days=int(arg))).strftime('%Y-%m-%d')
+                variables['target_date'] = target_date_
+            else:
+                print("引数は、数字もしくは、project_ids=131529,131247,115673,55351 (target_date=2024-09-18 output_file=../out/backlog_summary.txt))の形式になります。")
+                sys.exit()
+        else:
+            key, value = arg.split('=')
+            variables[key] = value
    
     if "target_date" in variables.keys():
         target_date = variables["target_date"]

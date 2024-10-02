@@ -1,6 +1,10 @@
 # config_reader.py
 import json
 import imaplib
+import pytz
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 import email
 from email.header import decode_header
@@ -90,5 +94,42 @@ def list_folders(email_account, email_password, imap_server, imap_port):
                     print(folder.decode())
             else:
                 print("フォルダの一覧取得に失敗しました")
+    except Exception as e:
+        print(f"エラーが発生しました: {e}")
+        
+# Gmailへ下書きを作成する。
+def create_draft(email_account, password, subject, body, imap_server, imap_port):    
+    # メールの作成
+    msg = MIMEMultipart()
+    msg['From'] = email_account
+    msg['To'] = 'k@s-cubism.jp, d_system_support@s-cubism.jp'  # 宛先
+    msg['Subject'] = subject
+
+    # メール本文を追加
+    msg.attach(MIMEText(body, 'plain'))
+
+    # メールをIMAPサーバに送信
+    try:
+        # SSLコンテキストを作成してIMAPサーバに接続
+        context = ssl.create_default_context()
+        with imaplib.IMAP4_SSL(imap_server, imap_port, ssl_context=context) as mail:
+            mail.login(email_account, password)
+            mail.select('inbox')  # 'inbox'フォルダを選択（必要に応じて変更）
+
+            # メールデータの変換
+            raw_message = msg.as_string()
+            
+            # タイムゾーンを含んだ現在日時（aware datetime）
+            tz = pytz.timezone('Asia/Tokyo')  # 自分のタイムゾーンに合わせて変更
+            now = datetime.now(tz)
+
+            # 下書きフォルダに保存
+            result = mail.append('[Gmail]/&Tgtm+DBN-', '\\Draft', imaplib.Time2Internaldate(now), raw_message.encode('utf-8'))
+                
+            if result[0] == 'OK':
+                print("下書きを作成しました")
+            else:
+                print(f"下書きの作成に失敗しました: {result}")
+
     except Exception as e:
         print(f"エラーが発生しました: {e}")

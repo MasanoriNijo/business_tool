@@ -8,7 +8,7 @@ import pytz
 import sys
 import re
 from util.config_reader import load_config
-from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email
+from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email, create_draft
 from util.backlog_module import fetch_backlog_tickets, fetch_backlog_comments, summarize_tickets, invert_dicｔ, remove_empty_lines
 
 
@@ -23,41 +23,41 @@ PASSWORD = config["PASSWORD"]  # アプリパスワードを使用（通常の�
 remoteFlg = True  # リモート勤務の場合True
 
 # Gmailへ下書きを作成する。
-def create_draft(subject, body):    
-    # メールの作成
-    msg = MIMEMultipart()
-    msg['From'] = EMAIL_ACCOUNT
-    msg['To'] = 'k@s-cubism.jp, d_system_support@s-cubism.jp'  # 宛先
-    msg['Subject'] = subject
+# def create_draft(subject, body):    
+#     # メールの作成
+#     msg = MIMEMultipart()
+#     msg['From'] = EMAIL_ACCOUNT
+#     msg['To'] = 'k@s-cubism.jp, d_system_support@s-cubism.jp'  # 宛先
+#     msg['Subject'] = subject
 
-    # メール本文を追加
-    msg.attach(MIMEText(body, 'plain'))
+#     # メール本文を追加
+#     msg.attach(MIMEText(body, 'plain'))
 
-    # メールをIMAPサーバに送信
-    try:
-        # SSLコンテキストを作成してIMAPサーバに接続
-        context = ssl.create_default_context()
-        with imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT, ssl_context=context) as mail:
-            mail.login(EMAIL_ACCOUNT, PASSWORD)
-            mail.select('inbox')  # 'inbox'フォルダを選択（必要に応じて変更）
+#     # メールをIMAPサーバに送信
+#     try:
+#         # SSLコンテキストを作成してIMAPサーバに接続
+#         context = ssl.create_default_context()
+#         with imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT, ssl_context=context) as mail:
+#             mail.login(EMAIL_ACCOUNT, PASSWORD)
+#             mail.select('inbox')  # 'inbox'フォルダを選択（必要に応じて変更）
 
-            # メールデータの変換
-            raw_message = msg.as_string()
+#             # メールデータの変換
+#             raw_message = msg.as_string()
             
-            # タイムゾーンを含んだ現在日時（aware datetime）
-            tz = pytz.timezone('Asia/Tokyo')  # 自分のタイムゾーンに合わせて変更
-            now = datetime.now(tz)
+#             # タイムゾーンを含んだ現在日時（aware datetime）
+#             tz = pytz.timezone('Asia/Tokyo')  # 自分のタイムゾーンに合わせて変更
+#             now = datetime.now(tz)
 
-            # 下書きフォルダに保存
-            result = mail.append('[Gmail]/&Tgtm+DBN-', '\\Draft', imaplib.Time2Internaldate(now), raw_message.encode('utf-8'))
+#             # 下書きフォルダに保存
+#             result = mail.append('[Gmail]/&Tgtm+DBN-', '\\Draft', imaplib.Time2Internaldate(now), raw_message.encode('utf-8'))
                 
-            if result[0] == 'OK':
-                print("下書きを作成しました")
-            else:
-                print(f"下書きの作成に失敗しました: {result}")
+#             if result[0] == 'OK':
+#                 print("下書きを作成しました")
+#             else:
+#                 print(f"下書きの作成に失敗しました: {result}")
 
-    except Exception as e:
-        print(f"エラーが発生しました: {e}")
+#     except Exception as e:
+#         print(f"エラーが発生しました: {e}")
 
 def get_japanese_weekday(date):
     # 曜日の英語表記から日本語表記へのマッピング
@@ -99,8 +99,8 @@ def main():
             extracted_text = match.group().strip()
         
         print(extracted_text)
-    body = f"\n本日の業務を開始します。\n\n開始 {current_time} -\n\n{extracted_text}\n\n▼その他\nチケット発生都度対応"
-    # create_draft(subject, body)
+    body = f"\n本日の業務を開始します。\n\n開始:{current_time} -\n\n{extracted_text}\n\n▼その他\nチケット発生都度対応"
+    create_draft(email_account = EMAIL_ACCOUNT, password = PASSWORD, subject = subject, body = body, imap_server = IMAP_SERVER, imap_port = IMAP_PORT)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

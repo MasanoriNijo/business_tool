@@ -10,7 +10,7 @@ import re
 from util.config_reader import load_config
 from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email
 from util.backlog_module import fetch_backlog_tickets, fetch_backlog_comments, summarize_tickets, invert_dicｔ, remove_empty_lines
-
+from util.nippo import Nippo
 
 config = load_config()
 
@@ -80,12 +80,15 @@ def get_japanese_weekday(date):
     return weekday_map.get(english_weekday, '未知')
 
 def main():
-    # 現在の日付時刻を取得して件名と本文に反映
+    # 現在の日付時刻を取得してパラメータとしてセット
     now = datetime.now()
-    current_date = now.strftime(f"%Y/%m/%d {get_japanese_weekday(now)}")
+    target_date =  now.strftime('%Y-%m-%d')
+    start_time = "xx:xx"
     current_time = now.strftime("%H:%M")
-    subject = f"【勤怠連絡】{current_date} 二條 {'リモート' if remoteFlg else '出社'}"
-
+    
+    # nippoクラスを作成
+    nippo = Nippo()
+    
     keyword_regex = "^【勤怠連絡】\d{4}/\d{1,2}/\d{1,2} [日月火水木金土] 二條 (リモート|出社)$"
     mail = connect_to_email_server(EMAIL_ACCOUNT, PASSWORD)
     filtered_emails = filter_emails_by_subject(mail, 7, folder = "[Gmail]/&kAFP4W4IMH8w4TD8MOs-", keyword_regex = keyword_regex)
@@ -94,15 +97,46 @@ def main():
     if len(filtered_emails[0]):
         extracted_text = extract_text_from_email(filtered_emails[0][-1])
         
+        startTimePtn = r'開始[\s:](\d{1,2}:\d{1,2})'
+        match = re.search(startTimePtn, extracted_text)
+        
+        if match:
+            start_time = match[1]
+        
+        print(extracted_text)
+        print(start_time)
+        
         pattern = r'▼[\s\S]*?(?=▼|$)'
         match = re.search(pattern, extracted_text)
         
         if match:
             extracted_text = match.group().strip()
         
-        print(extracted_text)
-    body = f"\n本日の業務を終了します。\n\n開始 {current_time} -\n\n{extracted_text}\n\n▼その他\nチケット発生都度対応"
-    # create_draft(subject, body)
+    body = f"\n本日の業務を終了します。\n\n開始:{start_time} - 終了:{current_time} \n\n{extracted_text}\n\n▼その他\nチケット発生都度対応"
+    # print(body)
+    nippo.addTxt(extracted_text)
+    
+    # backlogの当日の情報を取得
+    backlogTxt = ""
+    projects = invert_dict(PROJECT_DICT)
+    for name, projectIds in projects.items():
+        backlogTxt += f"▼{name}\n"
+        for project_id in projectIds:
+            tickets = fetch_backlog_tickets(date=target_date, project_id=project_id)               
+            if not tickets:
+                print(f"{name}(project_id:{project_id}) No tickets found for the specified date:{target_date}")
+                continue
+            
+            # チケットの要約を生成
+            summaries = summarize_tickets(tickets, target_date)
+            for ticket_key, summary in summaries.items():
+                backlogTxt += f"・{ticket_key} {summary['summary']}\n"
+                for date, comment in summary['comments'].items():
+                    backlogTxt +=f"→{date}:\n"
+                    backlogTxt +=f"{remove_empty_lines(comment)}\n"
+
+    print(nippo.exportText())
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

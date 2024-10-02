@@ -2,9 +2,10 @@ import requests
 import sys
 from datetime import datetime, timezone, timedelta
 import subprocess
+from util.backlog_module import fetch_backlog_tickets, fetch_backlog_comments, summarize_tickets
 
-from config_reader import load_config
-config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/config.json")
+from util.config_reader import load_config
+config = load_config()
 
 # BacklogのAPI設定
 API_KEY = config["BACKLOG_API_KEY"]
@@ -12,69 +13,6 @@ BACKLOG_SPACE = config["BACKLOG_SPACE"]
 PROJECT_DICT = config["PROJECT_DICT"] 
 
 project_ids = []
-
-# チケットを取得する関数
-def fetch_backlog_tickets(date=None, project_id=111):
-    if date is None:
-        date = datetime.now().strftime('%Y-%m-%d')
-    url = f"https://{BACKLOG_SPACE}.backlog.jp/api/v2/issues"
-    params = {
-        'apiKey': API_KEY,
-        'projectId[]': project_id,
-        # 'createdSince': date,  # この日付以降に作成されたチケットを取得
-        # 'createdUntil': date,  # この日付までに作成されたチケットを取得
-        'updatedSince': date,  # この日付以降に更新されたチケットを取得
-        # 'updatedUntil': date,  # この日付までに更新されたチケットを取得
-    }
-
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Error fetching tickets: {response.status_code}, {response.text}")
-        sys.exit(1)
-        
-# チケットのコメントを取得する関数
-def fetch_backlog_comments(ticketCode, date=None):
-    if date is None:
-        date = datetime.now().strftime('%Y-%m-%d')
-    url = f"https://{BACKLOG_SPACE}.backlog.jp/api/v2/issues/{ticketCode}/comments"
-    params = {
-        'apiKey': API_KEY,
-    }
-
-    response = requests.get(url, params=params)
-    if response.status_code == 200:
-        return response.json()
-    else:
-        print(f"Error fetching tickets: {response.status_code}, {response.text}")
-        sys.exit(1)
-
-# チケットの要約を生成する関数
-def summarize_tickets(tickets, target_date):
-    # summarizer = pipeline("summarization")
-    summaries = {}
-    
-    for ticket in tickets:      
-        # summary = summarizer(ticket_content, max_length=100, min_length=30, do_sample=False)[0]['summary_text']
-        summaries[ticket['issueKey']]= {}
-        summaries[ticket['issueKey']]["summary"] = ticket['summary']
-        summaries[ticket['issueKey']]["comments"] = {}
-        comments = fetch_backlog_comments(ticket['issueKey'])
-        for comment in comments:
-            updated_time = utc_to_jst(comment['updated'])
-            if updated_time > f"{target_date} 00:00:00":
-                summaries[ticket['issueKey']]["comments"][updated_time] = comment['content']
-    
-    return summaries
-
-def utc_to_jst(utc_time_str):
-    # 文字列からUTCの日時をパース
-    utc_time = datetime.strptime(utc_time_str, "%Y-%m-%dT%H:%M:%SZ")
-    # UTCから日本時間(JST)に変換 (JSTはUTC+9時間)
-    jst_time = utc_time.replace(tzinfo=timezone.utc).astimezone(timezone(timedelta(hours=9)))
-    # 日本時間のフォーマットで出力
-    return jst_time.strftime("%Y-%m-%d %H:%M:%S")
 
 # 要約をファイルに出力する関数
 def save_summaries_to_file(summaries, output_file):
@@ -219,6 +157,8 @@ if __name__ == "__main__":
     print(target_date)
     main(output_file=output_file, target_date=target_date, project_ids = project_ids)
     
+# python3 backlog.py 3 3日前
+
 # python3 backlog.py target_date=2024-09-18
 # python3 backlog.py project_ids=131529,131247,115673,55351 (target_date=2024-09-18 output_file=../out/backlog_summary.txt)
 

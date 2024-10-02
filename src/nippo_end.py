@@ -9,6 +9,8 @@ import sys
 import re
 from util.config_reader import load_config
 from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email
+from util.backlog_module import fetch_backlog_tickets, fetch_backlog_comments, summarize_tickets, invert_dicｔ, remove_empty_lines
+
 
 config = load_config()
 
@@ -17,8 +19,10 @@ IMAP_SERVER = config["IMAP_SERVER"]
 IMAP_PORT = config["IMAP_PORT"]
 EMAIL_ACCOUNT = config["EMAIL_ACCOUNT"]  # 自分のGmailアドレス
 PASSWORD = config["PASSWORD"]  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
-
-remoteFlg = True  # リモート勤務の場合True
+# BacklogのAPI設定
+API_KEY = config["BACKLOG_API_KEY"]
+BACKLOG_SPACE = config["BACKLOG_SPACE"] 
+PROJECT_DICT = config["PROJECT_DICT"] 
 
 # Gmailへ下書きを作成する。
 def create_draft(subject, body):    
@@ -82,7 +86,7 @@ def main():
     current_time = now.strftime("%H:%M")
     subject = f"【勤怠連絡】{current_date} 二條 {'リモート' if remoteFlg else '出社'}"
 
-    keyword_regex = "^Re: 【勤怠連絡】\d{4}/\d{1,2}/\d{1,2} [日月火水木金土] 二條 (リモート|出社)$"
+    keyword_regex = "^【勤怠連絡】\d{4}/\d{1,2}/\d{1,2} [日月火水木金土] 二條 (リモート|出社)$"
     mail = connect_to_email_server(EMAIL_ACCOUNT, PASSWORD)
     filtered_emails = filter_emails_by_subject(mail, 7, folder = "[Gmail]/&kAFP4W4IMH8w4TD8MOs-", keyword_regex = keyword_regex)
     subjects = filtered_emails[1]
@@ -97,8 +101,8 @@ def main():
             extracted_text = match.group().strip()
         
         print(extracted_text)
-    body = f"\n本日の業務を開始します。\n\n開始 {current_time} -\n\n{extracted_text}\n\n▼その他\nチケット発生都度対応"
-    create_draft(subject, body)
+    body = f"\n本日の業務を終了します。\n\n開始 {current_time} -\n\n{extracted_text}\n\n▼その他\nチケット発生都度対応"
+    # create_draft(subject, body)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

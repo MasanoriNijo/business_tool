@@ -29,7 +29,7 @@ PROJECT_DICT = config["PROJECT_DICT"]
 def main():
     
     # echo コマンドを実行してファイルを空にする
-    command2 = ['bash', '-c', 'echo "" > ../out/nippo_all.txt']
+    command2 = ['bash', '-c', 'echo "" > ../out/nippo_matome.txt']
     # コマンドの実行
     subprocess.run(command2, check=True)
     
@@ -62,7 +62,7 @@ def main():
         if match:
             extracted_text = match.group().strip()
         
-    body = f"\n本日の業務を終了します。\n\n開始:{start_time} - 終了:{current_time} \n\n"
+    body = f"\n本日の業務を終了します。\n\n開始:{start_time} - 終了:{current_time} \n"
     # print(body)
     nippo.addTxt(extracted_text)
     
@@ -88,7 +88,7 @@ def main():
     nippo.addTxt(backlogTxt)
     body += nippo.exportText()
     
-    save_text_to_file(body,"../out/nippo_all.txt")
+    save_text_to_file(body,"../out/nippo_matome.txt")
 
 
 if __name__ == "__main__":

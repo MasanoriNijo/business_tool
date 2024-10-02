@@ -99,7 +99,7 @@ def main():
             extracted_text = match.group().strip()
         
         print(extracted_text)
-    body = f"\n本日の業務を開始します。\n\n開始:{current_time} -\n\n{extracted_text}\n\n▼その他\nチケット発生都度対応"
+    body = f"\n本日の業務を開始します。\n\n開始:{current_time} -\n\n{extracted_text}\n\n▼その他\n・チケット発生都度対応"
     create_draft(email_account = EMAIL_ACCOUNT, password = PASSWORD, subject = subject, body = body, imap_server = IMAP_SERVER, imap_port = IMAP_PORT)
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import ssl
 import pytz
-from config_reader import load_config
+from util.config_reader import load_config
 import re
 
 config = load_config()

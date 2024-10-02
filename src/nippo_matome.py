@@ -8,81 +8,10 @@ import sys
 import copy
 import subprocess
 
-from config_reader import load_config
+from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email
+
+from util.config_reader import load_config
 config = load_config()
-
-# メールサーバに接続
-def connect_to_email_server(username, password, imap_server="imap.gmail.com"):
-    mail = imaplib.IMAP4_SSL(imap_server)
-    
-    try:
-        mail.login(username, password)
-        # 参照可能なフォルダ名を取得したい場合は、コメントアウト
-        # status, folders = mail.list()
-        # if status == "OK":
-            # for folder in folders:
-            #     print(folder.decode())
-    except imaplib.IMAP4.error as e:
-        print(f"ログイン失敗: {e}")
-        raise
-    
-    return mail
-
-
-# メールの件名を正規表現でフィルタリング
-def filter_emails_by_subject(mail, n_days_ago, folder="inbox", keyword_regex=".*"):
-    mail.select(folder)
-    
-    # メール一覧を取得(全件)
-    # result, data = mail.search(None, "ALL")
-    
-    # 直近N日分のメールを検索
-    N = int(n_days_ago)  
-    date_N_days_ago = (datetime.now() - timedelta(days=N)).strftime('%d-%b-%Y')
-    print(date_N_days_ago)
-    # SINCEコマンドでN日前以降のメールを検索
-    result, data = mail.search(None, f'SINCE {date_N_days_ago}')
-    filtered_emails = []
-    subjects = []
-    if result == "OK":
-        email_ids = data[0].split()
-        for email_id in email_ids:
-            result, msg_data = mail.fetch(email_id, "(RFC822)")
-            for response_part in msg_data:
-                if isinstance(response_part, tuple):
-                    msg = email.message_from_bytes(response_part[1])
-                    subject, encoding = decode_header(msg["Subject"])[0]
-                    
-                    # 件名がエンコードされている場合デコード
-                    if isinstance(subject, bytes):
-                        subject = subject.decode(encoding if encoding else "utf-8")
-                    
-                    # 正規表現で件名フィルタリング
-                    if re.search(keyword_regex, subject):
-                        filtered_emails.append(msg)
-                        subjects.append(subject)
-    
-    return [filtered_emails, subjects]
-
-# メールの内容をテキストとして抽出
-def extract_text_from_email(msg):
-    if msg.is_multipart():
-        for part in msg.walk():
-            content_type = part.get_content_type()
-            content_disposition = str(part.get("Content-Disposition"))
-            
-            # プレーンテキスト部分を抽出
-            if "attachment" not in content_disposition:
-                if content_type == "text/plain":
-                    try:
-                        data_ = part.get_payload(decode=True).decode("utf-8")
-                        return data_
-                    except:
-                        pass
-    else:
-        return msg.get_payload(decode=True).decode("utf-8")
-    
-    return ""
 
 # テキストの内容を成型してデータ構造として保持する。
 def _buf_add_to_nippo(buf, nippo, date = ""):
@@ -253,7 +182,7 @@ if __name__ == "__main__":
     # 件名のフィルタリングキーワード（正規表現）
     keyword_regex = "^Re: 【勤怠連絡】.*"
     
-    n_days_ago = 31
+    n_days_ago = 7
     if len(sys.argv) > 1:
         # 最初の要素はスクリプト名なので、それ以降を取得
         n_days_ago = sys.argv[1]

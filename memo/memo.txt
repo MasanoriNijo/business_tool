@@ -7,17 +7,47 @@ $ python3 nippo_gen.py
 Gmailの下書きに当日の始業開始メールの下書きが作成されます。
 
 2,日報確認
-$ python3 nippo_matome.py N  // Nは任意の日付対象をN日前までさかのぼって集計
+$ python3 nippo_matome.py N  // Nは任意の日付対象をN日前までさかのぼって集計,省略した場合, N=7として処理。
 out\nippo_matome.txtとout\nippo_all.txtに結果が出力されます。
 
 3,バックログの更新情報を取得
+$ python3 backlog.py N // Nは何日前までさかのぼるか、省略した場合は、当日のバックログのみ
+out\backlog_summary.txtに結果を出力]
+
 $ python3 backlog.py project_ids=131529,131247,115673,55351 // 引数に指定したproject_idのバックログの当日の更新情報を取得.
 out\backlog_summary.txtに結果を出力
 
 ※任意の日付までさかのぼって情報を取得したい場合は、以下の通り
 $ python3 backlog.py project_ids=131529,131247,115673,55351 target_date=2024-09-11　// この場合は、2024-09-11以降に更新された情報を表示。
 
-　　
+4,週報の作成
+前回（概ね先週）の週報をベースに、それ以降の日報の情報を加えて、当日の週報を生成する。
+引数に１を加えると、text出力および、Gmailの下書きに保存。引数に何も指定しない場合は、text出力のみ。
+$ python3 shuho_gen.py 1 // 引数の1を加えた場合、Gmailの下書きに格納。
 
+
+
+
+
+$ python3 get_mail_folder.py 
+利用可能なフォルダ一覧:
+(\HasNoChildren) "/" "3Snews"
+(\HasNoChildren) "/" "INBOX"
+(\HasNoChildren) "/" "Notes"
+(\HasChildren \Noselect) "/" "[Gmail]"
+(\All \HasNoChildren) "/" "[Gmail]/&MFkweTBmMG4w4TD8MOs-"
+(\HasNoChildren \Trash) "/" "[Gmail]/&MLQw33ux-"
+(\Flagged \HasNoChildren) "/" "[Gmail]/&MLkwvzD8TtgwTQ-"
+(\Drafts \HasNoChildren) "/" "[Gmail]/&Tgtm+DBN-"
+(\HasNoChildren \Junk) "/" "[Gmail]/&j,dg0TDhMPww6w-"
+(\HasNoChildren \Sent) "/" "[Gmail]/&kAFP4W4IMH8w4TD8MOs-"
+(\HasNoChildren \Important) "/" "[Gmail]/&kc2JgQ-"
+(\HasNoChildren) "/" "[m_all]"
+(\HasNoChildren) "/" "ionpet_log"
+(\HasNoChildren) "/" "ishibashi_log"
+(\HasNoChildren) "/" "&MF0wbk7W,wiRzYmBXqY-:&T04wRP8J-"
+(\HasNoChildren) "/" "&MF0wbk7W,wiRzYmBXqY-:&T04wRP8J-"
+(\HasNoChildren) "/" "&UuRgIJAjfWE-"
+(\HasNoChildren) "/" "&kDFYMQ-"
 
 

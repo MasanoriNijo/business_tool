@@ -5,7 +5,10 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime
 import ssl
 import pytz
-from config_reader import load_config
+import sys
+import re
+from util.config_reader import load_config
+from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email
 
 config = load_config()
 
@@ -15,9 +18,10 @@ IMAP_PORT = config["IMAP_PORT"]
 EMAIL_ACCOUNT = config["EMAIL_ACCOUNT"]  # 自分のGmailアドレス
 PASSWORD = config["PASSWORD"]  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
 
-def create_draft(subject, body):
-    """Gmailに下書きを作成する関数"""
-    
+remoteFlg = True  # リモート勤務の場合True
+
+# Gmailへ下書きを作成する。
+def create_draft(subject, body):    
     # メールの作成
     msg = MIMEMultipart()
     msg['From'] = EMAIL_ACCOUNT
@@ -76,12 +80,31 @@ def main():
     now = datetime.now()
     current_date = now.strftime(f"%Y/%m/%d {get_japanese_weekday(now)}")
     current_time = now.strftime("%H:%M")
-    subject = f"【勤怠連絡】{current_date} 二條 リモート"
-    body = f"\n本日の業務を開始します。\n\n開始 {current_time} -\n\n\n\n\n▼その他\nチケット発生都度対応"
-    
+    subject = f"【勤怠連絡】{current_date} 二條 {'リモート' if remoteFlg else '出社'}"
+
+    keyword_regex = "^Re: 【勤怠連絡】\d{4}/\d{1,2}/\d{1,2} [日月火水木金土] 二條 (リモート|出社)$"
+    mail = connect_to_email_server(EMAIL_ACCOUNT, PASSWORD)
+    filtered_emails = filter_emails_by_subject(mail, 7, folder = "[Gmail]/&kAFP4W4IMH8w4TD8MOs-", keyword_regex = keyword_regex)
+    subjects = filtered_emails[1]
+    print(subjects)
+    if len(filtered_emails[0]):
+        extracted_text = extract_text_from_email(filtered_emails[0][-1])
+        
+        pattern = r'▼[\s\S]*?(?=▼|$)'
+        match = re.search(pattern, extracted_text)
+        
+        if match:
+            extracted_text = match.group().strip()
+        
+        print(extracted_text)
+    body = f"\n本日の業務を開始します。\n\n開始 {current_time} -\n\n{extracted_text}\n\n▼その他\nチケット発生都度対応"
     create_draft(subject, body)
 
 if __name__ == "__main__":
+    if len(sys.argv) > 1:
+     # 最初の要素はスクリプト名なので、それ以降を取得
+     if sys.argv[1] == "s":
+         remoteFlg = False
     main()
 
-# python3 nippo_gen.py
+# python3 nippo_gen.py s

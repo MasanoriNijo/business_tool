@@ -109,4 +109,4 @@ if __name__ == "__main__":
          remoteFlg = False
     main()
 
-# python3 nippo_gen.py s
+# python3 nippo_start.py s // 出社の場合は引数にsを追記

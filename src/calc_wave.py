@@ -22,21 +22,27 @@ def calc_tempo_recursive(waves, startInd=0, tempoWaves=[], pitch=0, pitchCnt=0):
     waveTole = 0.1 # 波形値の許容減衰値
     matchPitchCnt = 5 # 判定OKとなるピッチ数
     
-    if len(tempoWaves) == 0:
+    if len(tempoWaves) < 2:
         while startInd < len(waves) and waves[startInd] <= 0.0:
             startInd +=1
+        if startInd == len(waves):
+            return 0
         pitchCnt = 0
         tempoWaves.append({"ind":startInd,"value":waves[startInd]})
-        return calc_tempo_recursive(waves,startInd,tempoWaves,pitch=0,pitchCnt=0)
-    
+        pitch=0
+        pitchCnt=0
+        if len(tempoWaves)==2:
+            pitch = tempoWaves[1]['ind']-tempoWaves[0]['ind']      
+        return calc_tempo_recursive(waves,startInd,tempoWaves,pitch,pitchCnt)
+
     headWave = tempoWaves[-1]
-    ind = int(headWave.ind + pitch*(1-pithTole))
+    ind = int(headWave['ind'] + pitch*(1-pithTole))
     if ind > len(waves):
         return -1
-    while ind < headWave.ind + pitch*(1+pithTole):
-        if waves[ind] > headWave.val * (1-waveTole):
-            if waves[ind] < headWave.val * (1+waveTole):
-                pitch_add = ind - headWave.ind
+    while ind < headWave['ind'] + pitch*(1+pithTole):
+        if waves[ind] > headWave['val'] * (1-waveTole):
+            if waves[ind] < headWave['val'] * (1+waveTole):
+                pitch_add = ind - headWave['ind']
                 pitchCnt +=1
                 pitch = (pitch * pitchCnt + pitch_add)/pitchCnt
                 tempoWaves.append({"ind":ind,"value":waves[ind]})
@@ -45,7 +51,7 @@ def calc_tempo_recursive(waves, startInd=0, tempoWaves=[], pitch=0, pitchCnt=0):
                 return calc_tempo_recursive(waves,ind,tempoWaves,pitch,pitchCnt)
         ind += 1
     # ここに到達した場合は、再度0からtempoWaves[0].indの次からやり直し。
-    startInd = tempoWaves[0].ind + 1
+    startInd = tempoWaves[0]['ind'] + 1
     calc_tempo_recursive(waves, startInd=startInd, tempoWaves=[], pitch=0, pitchCnt=0)
     
 # メイン関数
@@ -57,8 +63,8 @@ def main(input_file=r"C:\Users\masanori.nijo\Documents\chatGpt\in\audioExtremeDa
 
     for wave in waves:
         save_text_to_file(txt=wave,output_file="../out/wave.txt",msg=False)
-        
-    showScatterGrapth(xlines,waves)
+    answer = calc_tempo_recursive(waves=waves)
+    # showScatterGrapth(xlines,waves)
 
 if __name__ == "__main__":
 

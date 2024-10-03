@@ -49,6 +49,7 @@ def main():
     print(subjects[-1])
     if len(filtered_emails[0]):
         extracted_text = extract_text_from_email(filtered_emails[0][-1])
+        print("AAAA")
         print(extracted_text)
         
         startTimePtn = r'開始[\s:](\d{1,2}:\d{1,2})'
@@ -57,14 +58,15 @@ def main():
         if match:
             start_time = match[1]
                 
-        pattern = r'▼[\s\S]*?(?=▼|$)'
-        match = re.search(pattern, extracted_text)
+        # pattern = r'▼[\s\S]*?(?=▼|$)'
+        # match = re.search(pattern, extracted_text)
         
-        if match:
-            extracted_text = match.group().strip()
+        # if match:
+        #     extracted_text = match.group().strip()
         
     body = f"\n本日の業務を終了します。\n\n開始:{start_time} - 終了:{current_time} \n"
     nippo.addTxt(extracted_text)
+    print("BBBB")
     print(nippo.exportText())
     
     # backlogの当日の情報を取得

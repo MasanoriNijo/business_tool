@@ -1,14 +1,15 @@
 
 
 # TXTをファイルに出力する関数
-def save_text_to_file(txt, output_file):
+def save_text_to_file(txt, output_file, msg=True):
     try:
         with open(output_file, 'a', encoding='utf_8') as f:
             f.write(f"{txt}\n")
         
     except IOError as e:
         print(f"An I/O error occurred: {e}")
-    print(f"書き込み完了:path {output_file}")
+    if msg:
+        print(f"書き込み完了:path {output_file}")
 
 # テキスト記入
 def append_text_to_file(text, filename):
@@ -38,3 +39,17 @@ def get_japanese_weekday(date):
     
     # 日本語の曜日を返す
     return weekday_map.get(english_weekday, '未知')
+
+# 引数に指定したファイルの情報を読み込む
+def read_file(file_path):
+    try:
+        # 指定されたファイルを読み込む
+        with open(file_path, 'r', encoding='utf-8') as file:
+            content = file.read()
+        return content
+    except FileNotFoundError:
+        print(f"Error: {file_path} が見つかりません。")
+        return None
+    except Exception as e:
+        print(f"Error: {e}")
+        return None

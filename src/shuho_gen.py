@@ -12,8 +12,8 @@ import pytz
 import copy
 import subprocess
 
-from config_reader import load_config
-config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/config.json")
+from util.config_reader import load_config
+config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/conf/config.json")
 IMAP_SERVER = config["IMAP_SERVER"]
 IMAP_PORT = config["IMAP_PORT"]
 EMAIL_ACCOUNT = config["EMAIL_ACCOUNT"]  # 自分のGmailアドレス

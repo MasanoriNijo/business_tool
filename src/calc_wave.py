@@ -18,41 +18,63 @@ def showScatterGrapth(Xs,Ys):
     plt.show()
 
 def calc_tempo_recursive(waves, startInd=0, tempoWaves=[], pitch=0, pitchCnt=0):
-    pithTole = 0.001 # ピッチの許容誤差
-    waveTole = 0.1 # 波形値の許容減衰値
+    pithTole = 0.05 # ピッチの許容誤差
+    waveTole = 0.3 # 波形値の許容減衰値
     matchPitchCnt = 5 # 判定OKとなるピッチ数
     
     if len(tempoWaves) < 2:
         while startInd < len(waves) and waves[startInd] <= 0.0:
             startInd +=1
         if startInd == len(waves):
-            return 0
-        pitchCnt = 0
-        tempoWaves.append({"ind":startInd,"value":waves[startInd]})
-        pitch=0
-        pitchCnt=0
-        if len(tempoWaves)==2:
-            pitch = tempoWaves[1]['ind']-tempoWaves[0]['ind']      
+            print(f"NG！A")
+            return -1
+            
+        if len(tempoWaves)==0:
+            tempoWaves.append({"ind":startInd,"val":waves[startInd]})
+            pitch=0
+            pitchCnt=0
+            startInd +=1
+            return calc_tempo_recursive(waves,startInd,tempoWaves,pitch,pitchCnt)
+        elif len(tempoWaves)==1:
+            if waves[startInd] > tempoWaves[0]['val'] * (1-waveTole):
+                if waves[startInd] < tempoWaves[0]['val'] * (1+waveTole):
+                    tempoWaves.append({"ind":startInd,"val":waves[startInd]})                   
+                    pitch = tempoWaves[1]['ind']-tempoWaves[0]['ind']            
+                    pitchCnt=1
+                    startInd +=1
+                    return calc_tempo_recursive(waves,startInd,tempoWaves,pitch,pitchCnt)
+        startInd +=1
         return calc_tempo_recursive(waves,startInd,tempoWaves,pitch,pitchCnt)
 
     headWave = tempoWaves[-1]
     ind = int(headWave['ind'] + pitch*(1-pithTole))
     if ind > len(waves):
+        print(f"NG！B")
         return -1
     while ind < headWave['ind'] + pitch*(1+pithTole):
         if waves[ind] > headWave['val'] * (1-waveTole):
             if waves[ind] < headWave['val'] * (1+waveTole):
                 pitch_add = ind - headWave['ind']
+                pitch = (pitch * pitchCnt + pitch_add)/(pitchCnt+1)
                 pitchCnt +=1
-                pitch = (pitch * pitchCnt + pitch_add)/pitchCnt
-                tempoWaves.append({"ind":ind,"value":waves[ind]})
+                tempoWaves.append({"ind":ind,"val":waves[ind]})
                 if pitchCnt == matchPitchCnt:
-                    return [tempoWaves,pitch]
+                    return [pitch,tempoWaves]
                 return calc_tempo_recursive(waves,ind,tempoWaves,pitch,pitchCnt)
+            else:
+                print(f"ind:{ind},value:{waves[ind]}")
+                print([pitch,tempoWaves])
+        elif waves[ind]>0:
+            print(f"ind:{ind},value:{waves[ind]}")
+            print([pitch,tempoWaves])
+                
         ind += 1
+        
     # ここに到達した場合は、再度0からtempoWaves[0].indの次からやり直し。
+    print(f"ind:{ind},value:{waves[ind]}")
+    print([pitch,tempoWaves])
     startInd = tempoWaves[0]['ind'] + 1
-    calc_tempo_recursive(waves, startInd=startInd, tempoWaves=[], pitch=0, pitchCnt=0)
+    return calc_tempo_recursive(waves, startInd=startInd, tempoWaves=[], pitch=0, pitchCnt=0)
     
 # メイン関数
 def main(input_file=r"C:\Users\masanori.nijo\Documents\chatGpt\in\audioExtremeDataArray_sample.txt"):
@@ -61,10 +83,15 @@ def main(input_file=r"C:\Users\masanori.nijo\Documents\chatGpt\in\audioExtremeDa
     waves =  [float(item) for item in waveTexts]
     xlines = [ind for ind in range(len(waves))]
 
+    ind = 0
     for wave in waves:
-        save_text_to_file(txt=wave,output_file="../out/wave.txt",msg=False)
+        if wave != 0.0:
+            save_text_to_file(txt=f"{ind},{wave}",output_file="../out/wave.txt",msg=False)
+        ind +=1
     answer = calc_tempo_recursive(waves=waves)
-    # showScatterGrapth(xlines,waves)
+    print("anser")
+    print(answer)
+    showScatterGrapth(xlines,waves)
 
 if __name__ == "__main__":
 

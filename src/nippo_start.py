@@ -92,11 +92,13 @@ def main():
     if len(filtered_emails[0]):
         extracted_text = extract_text_from_email(filtered_emails[0][-1])
         
-        pattern = r'▼[\s\S]*?(?=▼|$)'
-        match = re.search(pattern, extracted_text)
-        
-        if match:
-            extracted_text = match.group().strip()
+        pattern = r'▼\s*[\s\S]*?(?=▼|\d{4}年\d{1,2}月\d{1,2}日\([月火水木金土日]\).*)'
+
+        matchs = re.findall(pattern, extracted_text)
+        extracted_text = ''
+        if matchs:
+            for match in matchs:
+                extracted_text += f"{match}" 
         
         print(extracted_text)
     body = f"\n本日の業務を開始します。\n\n開始:{current_time} -\n\n{extracted_text}\n\n▼その他\n・チケット発生都度対応"

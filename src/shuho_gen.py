@@ -130,7 +130,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = "", finRegex = "xxxx_nasi
     for mltxt in mailTxts:
         if startFlg:
             matchedFlg = False
-            append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")      
+            append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_ALL_FILE']}")      
             for ind_ in range(4):
                 match = re.match("^" + komokuRegexs[ind_] + "(.*)",mltxt)
                 if match:
@@ -346,12 +346,12 @@ def get_japanese_weekday(date):
 # メイン処理
 def main(username, password, draftMade):
      
-    command2 = ['bash', '-c', 'echo "" > C:/Users/masanori.nijo/Documents/chatGpt/out/nippo_all.txt']
+    command2 = ['bash', '-c', 'echo "" > C:/Users/masanori.nijo/Documents/chatGpt/out/syuho_all.txt']
     # コマンドの実行
     subprocess.run(command2, check=True)
      
     # echo コマンドを実行してファイルを空にする
-    command3 = ['bash', '-c', 'echo "" > C:/Users/masanori.nijo/Documents/chatGpt/out/nippo_matome.txt']
+    command3 = ['bash', '-c', 'echo "" > C:/Users/masanori.nijo/Documents/chatGpt/out/syuho_matome.txt']
     # コマンドの実行
     subprocess.run(command3, check=True)
     
@@ -369,7 +369,7 @@ def main(username, password, draftMade):
     subject = shuho_email_last[1]
     
     print(subject)
-    append_text_to_file(subject[0], f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")
+    append_text_to_file(subject[0], f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_ALL_FILE']}")
     
     # 3. 前回の週報の本文を抽出
     shuho_text = extract_text_from_email(shuho_email_last[0][0])
@@ -395,7 +395,7 @@ def main(username, password, draftMade):
     for ind, extracted_text in enumerate(nippo_texts):
         dateRegex = ".*\d{4}/(\d{1,2}/\d{1,2}).*"
         date = ""
-        append_text_to_file("\n" + subjects[ind], f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")
+        append_text_to_file("\n" + subjects[ind], f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_ALL_FILE']}")
         match = re.match(dateRegex, subjects[ind])
         if match:
             date = " (" + match[1].strip() + ")@@@" # @@@は後処理のメール下書きに成型時の赤文字に変換するための目印。
@@ -404,7 +404,7 @@ def main(username, password, draftMade):
         nippoTxt = exportDataRecursive(nippo)
 
     nippoTxt = exportDataRecursive(nippo)
-    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_MATOME_FILE']}")
+    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_MATOME_FILE']}")
     
     if draftMade == 0:
         print("Text出力しました。")

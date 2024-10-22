@@ -49,8 +49,8 @@ def main():
     print(subjects[-1])
     if len(filtered_emails[0]):
         extracted_text = extract_text_from_email(filtered_emails[0][-1])
-        print("AAAA")
-        print(extracted_text)
+        # print("AAAA")
+        # print(extracted_text)
         
         startTimePtn = r'開始[\s:](\d{1,2}:\d{1,2})'
         match = re.search(startTimePtn, extracted_text)

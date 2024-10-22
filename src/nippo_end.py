@@ -29,7 +29,7 @@ PROJECT_DICT = config["PROJECT_DICT"]
 def main():
     
     # echo コマンドを実行してファイルを空にする
-    command2 = ['bash', '-c', 'echo "" > ../out/nippo_matome.txt']
+    command2 = ['bash', '-c', 'echo "" > ../out/nippo_end.txt']
     # コマンドの実行
     subprocess.run(command2, check=True)
     
@@ -63,12 +63,18 @@ def main():
         
         # if match:
         #     extracted_text = match.group().strip()
-        
-    body = f"\n本日の業務を終了します。\n\n開始:{start_time} - 終了:{current_time} \n"
-    nippo.addTxt(extracted_text)
-    print("BBBB")
-    print(nippo.exportText())
+            # 時刻を datetime オブジェクトに変換
+    start = datetime.strptime(start_time, "%H:%M")
+    end = datetime.strptime(current_time, "%H:%M")
     
+    # 差分を計算
+    time_diff = end - start
+    time_diff = time_diff.total_seconds() / 3600
+    time_diff = round(time_diff,0)
+    
+    body = f"\n本日の業務を終了します。\n\n開始:{start_time} - 終了:{current_time} ({str(time_diff-1)})\n"
+    nippo.addTxt(extracted_text)
+  
     # backlogの当日の情報を取得
     backlogTxt = ""
     projects = invert_dict(PROJECT_DICT)
@@ -91,8 +97,27 @@ def main():
     nippo.addTxt(backlogTxt)
     body += nippo.exportText()
     
-    save_text_to_file(body,"../out/nippo_matome.txt")
+    save_text_to_file(body,"../out/nippo_end.txt")
 
+def calculate_time_difference(time_text):
+    # 正規表現で "開始" と "終了" の時間を抽出
+    match = re.search(r'開始[:：](\d{2}:\d{2})\s*-\s*終了[:：](\d{2}:\d{2})', time_text)
+    
+    if match:
+        # 開始時間と終了時間を取得
+        start_time = match.group(1)
+        end_time = match.group(2)
+        
+        # 時刻を datetime オブジェクトに変換
+        start = datetime.strptime(start_time, "%H:%M")
+        end = datetime.strptime(end_time, "%H:%M")
+        
+        # 差分を計算
+        time_diff = end - start
+        
+        return time_diff
+    else:
+        return -1
 
 if __name__ == "__main__":
 

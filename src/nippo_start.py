@@ -1,18 +1,12 @@
-import imaplib
-import email
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-import ssl
-import pytz
 import sys
 import re
 from util.config_reader import load_config
 from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email, create_draft
-from util.backlog_module import fetch_backlog_tickets, fetch_backlog_comments, summarize_tickets, invert_dicｔ, remove_empty_lines
 
-
-config = load_config()
+config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/conf/config.json")
 
 # GmailのIMAPサーバー情報
 IMAP_SERVER = config["IMAP_SERVER"]
@@ -92,6 +86,12 @@ def main():
     if len(filtered_emails[0]):
         extracted_text = extract_text_from_email(filtered_emails[0][-1])
         
+        # 2024年9月12日(木) 10:43 二條正則 <masanori.nijo@s-cubism.jp>: のところを含むそれ以降は削除。
+        ignore_ptn = r"(.*?)(?=\d{4}年\d{1,2}月\d{1,2}日\([月火水木金土日]\) \d{1,2}:\d{2} .*? <.*?>)"
+        match = re.search(ignore_ptn, extracted_text, re.DOTALL)    
+        if match:
+            extracted_text = match.group(1).strip()
+        
         pattern = r'▼\s*[\s\S]*?(?=▼|\d{4}年\d{1,2}月\d{1,2}日\([月火水木金土日]\).*)'
 
         matchs = re.findall(pattern, extracted_text)
@@ -99,6 +99,11 @@ def main():
         if matchs:
             for match in matchs:
                 extracted_text += f"{match}" 
+        
+        # 文字の前後の空白改行コードを削除する
+        extracted_text = extracted_text.strip()
+        extracted_text = extracted_text.strip("\n")
+        extracted_text = extracted_text.strip("\r")
         
         print(extracted_text)
     body = f"\n本日の業務を開始します。\n\n開始:{current_time} -\n\n{extracted_text}\n\n▼その他\n・チケット発生都度対応"

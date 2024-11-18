@@ -43,13 +43,13 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
     for mltxt in mailTxts:
         if startFlg:
             matchedFlg = False
-            append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")      
             for ind_ in range(4):
                 match = re.match("^" + komokuRegexs[ind_] + "(.*)",mltxt)
                 if match:
                     matchedFlg = True        
                     if ind < ind_ and ind_ < 3:
                         buf.append(match[1].strip())
+                        append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")      
                         ind += 1
                     elif ind == ind_:
                         # 追加する。       
@@ -57,6 +57,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
                         # bufを戻す。
                         buf.pop()
                         buf.append(match[1].strip())
+                        append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")      
                     elif ind_ < 3:
                         # 追加する。       
                         _buf_add_to_nippo(buf, nippo, date)
@@ -65,6 +66,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
                             buf.pop()
                             ind -= 1
                         buf.append(match[1].strip())
+                        append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")      
                         ind += 1
                     else: # 追記対象の最後を感知した場合。
                         # 最後を追加する。そして処理を抜ける。
@@ -79,6 +81,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
             if match:
                 startFlg = True
                 buf.append(match[1].strip())
+                append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")      
                 ind = 0
     return nippo
                 
@@ -161,8 +164,9 @@ def main(username, password, keyword_regex, n_days_ago = 7):
             date = " (" + match[1].strip() + ")"
         # append_text_to_file(extracted_text, "nippou.txt")
         nippo = exchange_text_to_nippo(extracted_text, nippo, date)
-        nippoTxt = exportDataRecursive(nippo)
-        subjects[ind]
+        
+        # nippoTxt = exportDataRecursive(nippo)
+        # subjects[ind]
         # append_text_to_file(subjects[ind], "nippou_xxx.txt")
         # append_text_to_file(nippoTxt, "nippou_xxx.txt")
         

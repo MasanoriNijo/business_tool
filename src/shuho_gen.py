@@ -130,13 +130,15 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = "", finRegex = "xxxx_nasi
     for mltxt in mailTxts:
         if startFlg:
             matchedFlg = False
-            append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_ALL_FILE']}")      
+            
             for ind_ in range(4):
                 match = re.match("^" + komokuRegexs[ind_] + "(.*)",mltxt)
+    
                 if match:
                     matchedFlg = True        
                     if ind < ind_ and ind_ < 3:
                         buf.append(match[1].strip())
+                        append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_ALL_FILE']}")      
                         ind += 1
                     elif ind == ind_:
                         # 追加する。       
@@ -144,6 +146,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = "", finRegex = "xxxx_nasi
                         # bufを戻す。
                         buf.pop()
                         buf.append(match[1].strip())
+                        append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_ALL_FILE']}")      
                     elif ind_ < 3:
                         # 追加する。       
                         _buf_add_to_nippo(buf, nippo, date)
@@ -152,10 +155,11 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = "", finRegex = "xxxx_nasi
                             buf.pop()
                             ind -= 1
                         buf.append(match[1].strip())
+                        append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_ALL_FILE']}")      
                         ind += 1
                     else: # 追記対象の最後を感知した場合。
                         # 最後を追加する。そして処理を抜ける。
-                        _buf_add_to_nippo(buf, nippo, date) 
+                        _buf_add_to_nippo(buf, nippo, date)
                         return nippo
                     break
             if not matchedFlg:
@@ -166,6 +170,7 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = "", finRegex = "xxxx_nasi
             if match:
                 startFlg = True
                 buf.append(match[1].strip())
+                append_text_to_file(mltxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_ALL_FILE']}")      
                 ind = 0
     _buf_add_to_nippo(buf, nippo, date) # 最終行まで処理をするので、最後に追記する。
     return nippo

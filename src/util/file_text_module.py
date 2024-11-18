@@ -67,16 +67,7 @@ def get_files_with_extension(folder_path, extension = 'xlsx'):
 
 # 余分な改行、空白を削除する
 def trim_text_all(txt):
-    out_put = ''
-    for item in txt.split("\n"):
-        item = item.strip()
-        item = item.strip("\n")
-        item = item.strip("\r")
-        item = item.strip("\n")
-        item = item.strip("\r")
-        item = item.strip()
-        item = item.replace('\r','')
-        item = item.replace('\n','')
-        if item:
-            out_put += item + '\r\n' 
-    return out_put
+    # 各行を処理して、結果をリストにまとめる
+    lines = [line.strip() for line in txt.split("\r\n") if line.strip()]
+    # 再びテキストとして結合
+    return "\r\n".join(lines)

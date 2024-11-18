@@ -1,4 +1,5 @@
 import openpyxl
+from util.file_text_module import trim_text_all
 
 def excel_to_text_obj(excel_file):
     # Excelファイルを読み込む
@@ -30,8 +31,10 @@ def excel_to_text(excel_file):
         for row in rows:
             for value in row:
                 if value:
-                    out_put += str(value)
+                    value = str(value)
+                    value = value.replace('\r\n','')
+                    out_put += value
                 else:
                     out_put += ' '
-            out_put += '\r\n'
+        out_put += '\r\n'
     return out_put

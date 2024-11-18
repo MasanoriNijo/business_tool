@@ -18,10 +18,16 @@ def main(folder_path = 'C:/Users\masanori.nijo/Documents/chatGpt/in'):
     file_paths = get_files_with_extension(folder_path)
     
     for file_path in file_paths:
-        print(file_path)
-        result = excel_to_text(file_path)
-        result = trim_text_all(result)
-        save_text_to_file(result, 'C:/Users/masanori.nijo/Documents/chatGpt/out/excel_all.txt')
+        try:
+            print(file_path)
+            save_text_to_file( "WORKBOOK:" + file_path + "\r\n" , 'C:/Users/masanori.nijo/Documents/chatGpt/out/excel_all.txt')
+            result = excel_to_text(file_path)
+            result = trim_text_all(result)
+            save_text_to_file(result, 'C:/Users/masanori.nijo/Documents/chatGpt/out/excel_all.txt')
+        except Exception as e:
+            print(e)
+        finally:
+            continue
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

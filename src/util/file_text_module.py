@@ -1,4 +1,4 @@
-
+import os
 
 # TXTをファイルに出力する関数
 def save_text_to_file(txt, output_file, msg=True):
@@ -53,3 +53,30 @@ def read_file(file_path):
     except Exception as e:
         print(f"Error: {e}")
         return None
+
+def get_files_with_extension(folder_path, extension = 'xlsx'):
+
+    file_list = []
+    
+    for root, _, files in os.walk(folder_path):
+        for file in files:
+            if file.endswith(extension):
+                file_list.append(os.path.join(root, file))
+    
+    return file_list
+
+# 余分な改行、空白を削除する
+def trim_text_all(txt):
+    out_put = ''
+    for item in txt.split("\n"):
+        item = item.strip()
+        item = item.strip("\n")
+        item = item.strip("\r")
+        item = item.strip("\n")
+        item = item.strip("\r")
+        item = item.strip()
+        item = item.replace('\r','')
+        item = item.replace('\n','')
+        if item:
+            out_put += item + '\r\n' 
+    return out_put

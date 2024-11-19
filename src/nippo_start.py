@@ -90,9 +90,9 @@ def main():
         ignore_ptn = r"(.*?)(?=\d{4}年\d{1,2}月\d{1,2}日\([月火水木金土日]\) \d{1,2}:\d{2} .*? <.*?>)"
         match = re.search(ignore_ptn, extracted_text, re.DOTALL)    
         if match:
-            extracted_text = match.group(1).strip()
+            extracted_text = match.group(1).strip() + "END@@@"
         
-        pattern = r'▼\s*[\s\S]*?(?=▼|\d{4}年\d{1,2}月\d{1,2}日\([月火水木金土日]\).*)'
+        pattern = r'▼[\s\S]*?(?=▼|END@@@)'
 
         matchs = re.findall(pattern, extracted_text)
         extracted_text = ''

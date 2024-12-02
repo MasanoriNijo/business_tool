@@ -78,8 +78,25 @@ def out_put_object(obj, file, lvl = 0):
         for value in obj:
             out_put_object(value,file,lvl+1)            
     elif isinstance(obj,dict):
-        for key, value in obj.items():            
-            save_text_to_file(" " * lvl + key,file,False)
-            out_put_object(value,file,lvl+1)             
+        for key, value in obj.items():
+            if isinstance(value,list) or isinstance(value,dict):     
+                save_text_to_file(" " * lvl + key, file,False)
+                out_put_object(value,file,lvl+1)
+            else:        
+                save_text_to_file(" " * lvl + key + ": " + value, file,False)
     else:
         save_text_to_file("  " * lvl + obj,file,False)
+
+# xxx,yyyの2項形式のCSV(ヘッダ無し)をkey:xxx,value:yyyに辞書化する。
+def gen_dict_from_csv(file_path):
+    dict = {}
+    with open(file_path, "r", encoding="utf-8") as file:
+        for line_number, line in enumerate(file):
+            # ヘッダー行をスキップ
+            # if line_number == 0:
+            #     continue
+            # 行をカンマで分割してキーと値を取得
+            key, value = line.strip().split(",")
+            # 辞書に追加（値を整数に変換）
+            dict[key] = value
+    return dict

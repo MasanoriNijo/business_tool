@@ -1,6 +1,8 @@
 import json
 import re
 import sys
+from file_text_module import out_put_object
+import subprocess
 
 def load_table_structure(json_file):
     """JSONからテーブル構造を読み込む"""
@@ -27,9 +29,9 @@ def new_func():
 
 
 def find_referenced_table(target_table, tables, visited = [], referenced_tables = {}, poss = []):
-    print(target_table)
-    print(referenced_tables)
-    print(poss)
+    # print(target_table)
+    # print(referenced_tables)
+    # print(poss)
     if not referenced_tables:
         referenced_tables = [{target_table:[]}]
         poss=[target_table]
@@ -42,18 +44,20 @@ def find_referenced_table(target_table, tables, visited = [], referenced_tables 
         if table == target_table:
             continue
 
-        for column in columns:
-            if column["column_name"] == target_table + "_id":
+        for column, value in columns.items():
+            if column == target_table + "_id":
                 ref = referenced_tables
                 n=0           
                 for pos in poss:
-                    print(n)
-                    print(pos)
-                    print(ref)
+                    # print(n)
+                    # print(pos)
+                    # print(ref)
                     ref = get_dict_by_key(ref,pos)
-                    print(ref)
+                    # print(ref)
                     n+=1
-                ref.append({table:[]})
+                print(value)
+                key = table
+                ref.append({key:[{"cnt":value["cnt"]}]})
                 _poss = poss.copy()
                 _poss.append(table)                    
                 find_referenced_table(table,tables,visited,referenced_tables, _poss)
@@ -68,17 +72,27 @@ def get_dict_by_key(lst, key):
     return None  # 見つからない場合は None を返す
 
 def main(target_table = "product"):
+    
+    out_path = "C:/Users/masanori.nijo/Documents/chatGpt/out/relate_tables.txt"
+    # echo コマンドを実行してファイルを空にする
+    command2 = f'bash -c "echo \'\' > {out_path}"'
+    subprocess.run(command2, shell=True, check=True)
+    
     # JSONファイルを読み込む
-    json_file = "../../out/tables.json"  # テーブル構造JSON
+    json_file = "C:/Users/masanori.nijo/Documents/chatGpt/out/tables.json"  # テーブル構造JSON
     tables = load_table_structure(json_file)
+    # print(tables)
 
     # 任意のテーブルを指定してリレーションを探索
     referenced_tables = find_referenced_table(target_table, tables)
 
-    print(f"'{target_table}' が参照されるテーブル: {referenced_tables}")
-    output_file = "../../out/relate_tables.jsonn"
+    # print(f"'{target_table}' が参照されるテーブル: {referenced_tables}")
+    output_file = "C:/Users/masanori.nijo/Documents/chatGpt/out/relate_tables.json"
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(referenced_tables, f, ensure_ascii=False, indent=4)
+        
+    out_put_object(referenced_tables, out_path)
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

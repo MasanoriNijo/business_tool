@@ -29,8 +29,8 @@ def new_func():
 
 def find_work(table_pos,works):
     for work in works:
-        print("AAA")
-        print(work)
+        # print("AAA")
+        # print(work)
         if work["work"] == table_pos:
             return work
     return None
@@ -44,6 +44,8 @@ def refresh_work(works):
         # print(work)
         poss = work["work"].split("←")
         work_txt = f"work:{work['work']}\n"
+        work_txt += f"table:{work['table']}\n"
+        work_txt += f"cnt:{work['cnt']}\n"
         work_txt += f"mysql> {work['mysql']['query']}\n"
         work_txt += "+----------------------------+\n"
         work_txt += f"| {poss[-1]}_id |\n"
@@ -55,14 +57,14 @@ def refresh_work(works):
         workTxt += work_txt
     save_text_to_file(workTxt,"C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/work.txt")
 
-def gen_referenced_table(target_table, tables, works, visited = [], referenced_tables = {}, poss = []):
+def gen_referenced_table(target_table, tables, works, table_result, visited = [], referenced_tables = {}, poss = []):
     # print(target_table)
     # print(referenced_tables)
     # print(poss)
     if not referenced_tables:
         cnt_ = next(iter(tables[target_table].items()))
-        print('BBB')
-        print(cnt_)
+        # print('BBB')
+        # print(cnt_)
         referenced_tables = [{target_table:[{"cnt":cnt_[1]["cnt"]},{"id":[]}]}]
         poss=[target_table]
 
@@ -79,22 +81,31 @@ def gen_referenced_table(target_table, tables, works, visited = [], referenced_t
         
         work_ = {}
         work_['work'] = table_pos
+        work_['table'] = target_table
+        work_['cnt'] = table_result[target_table]["cnt"]
         work_['mysql'] = {}
-        query = f"select {target_table}_id from {target_table} "
+        query = f"select {target_table}_id from {target_table}"
         if parent_work == None:
-            query += f" where deleted_at is null order by updated_at desc limit 10000"
+            query += f" where deleted_at is null order by updated_at desc limit 10000;"
         else:
-            parent_table = poss[:-2]
+            parent_table = poss[-2]
             idsTxt = ""
-            for id in parent_work["mysql"]["result"]:
-                idsTxt += f"'{id}',"
-            query += f" where {parent_table}_id in ({idsTxt[:-1]})"
-        work_['mysql']['query'] = query        
-        work_['mysql']['result'] = ["TODO"]         
-        works.append(work_)
-        print("以下処理してください")
-        print(work_)
-        return None
+            if parent_work["mysql"]["result"][0] == "ALL":
+                query += f" where deleted_at is null order by updated_at desc limit 10000;"
+            else:    
+                for id in parent_work["mysql"]["result"]:
+                    idsTxt += f"'{id}',"
+                query += f" where {parent_table}_id in ({idsTxt[:-1]});"
+        work_['mysql']['query'] = query
+        if int(work_['cnt']) < 10000:            
+            work_['mysql']['result'] = ["ALL"]         
+            works.append(work_)
+        else:
+            work_['mysql']['result'] = ["TODO"]         
+            works.append(work_)
+            print("以下処理してください")
+            print(work_)
+            return None
     
     for table, columns in tables.items():
         if table == target_table:
@@ -116,12 +127,12 @@ def gen_referenced_table(target_table, tables, works, visited = [], referenced_t
                 ref.append({key:[{"cnt":value["cnt"]},{"id":[]}]})
                 _poss = poss.copy()
                 _poss.append(table)                    
-                gen_referenced_table(table,tables,works,visited,referenced_tables, _poss)
+                gen_referenced_table(table, tables, works, table_result, visited,referenced_tables, _poss)
                     
     return referenced_tables
 
 # table構造データから、rootテーブルのリストを作成。rootテーブル:カラム内に外部主キーがないもの。
-def find_root_tables(tables):
+def check_root_tables(tables,table_result):
     root_tables = []
     for table, columns in tables.items():
         findRoot = True
@@ -133,7 +144,40 @@ def find_root_tables(tables):
                 break
         if findRoot:
             root_tables.append(table)
+    for table in root_tables:
+        table_result[table]["type"] = "root"        
+
     return root_tables
+
+# table数の
+def gen_table_result(tables):
+    # テーブル名とID取得結果を保存するリストを初期生成する。
+    table_result = {}
+    
+    for table, column in tables.items():
+        table_result[table]={}
+        table_result[table]["type"]="none"
+        table_result[table]["id"]=[]
+
+    # 正規表現パターン
+    pattern = r"^\|(.*)\| (.*)\|$"
+
+    # ファイルを読み込む
+    with open("C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/table_cnt.txt", "r", encoding="utf-8") as file:
+        for line in file:
+            match = re.match(pattern, line)
+            if match:
+                table_name = match.group(1).strip() # テーブル名
+                row_count = match.group(2).strip() # 行数
+                if not table_name in table_result:
+                    continue 
+                table_result[table_name]["cnt"] = row_count
+                if int(row_count) < 10000:
+                    table_result[table_name]["sql"] = "ALL"
+                else:
+                    table_result[table_name]["sql"] = "PARTIAL"
+                    
+    return table_result
 
 # table構造データから、rootテーブルのリストを作成。rootテーブル:カラム内に外部主キーがないもの。
 def gen_table_ids(tables):
@@ -155,19 +199,23 @@ def read_work():
     for match in matches:
         print(match.group())  # マッチした全体を取得
         # workとSQL部分を抽出する正規表現
-        pattern = re.compile(r"work:(.*?)\nmysql> (.*?)\n\+-+\+\n.*\n\+-+\+\n(.*?)\n\+-+\+", re.DOTALL)
+        pattern = re.compile(r"work:(.*?)\ntable:(.*?)\ncnt:(.*?)\nmysql> (.*?)\n\+-+\+\n.*\n\+-+\+\n(.*?)\n\+-+\+", re.DOTALL)
         # 結果を格納するリスト
         # マッチ結果を処理
         for match in pattern.finditer(match.group()):
             work_label = match.group(1).strip()
-            sql_query = match.group(2).strip()
-            sql_result = match.group(3).strip().split("\n")
+            table_name = match.group(2).strip()
+            table_cnt = match.group(3).strip()
+            sql_query = match.group(4).strip()
+            sql_result = match.group(5).strip().split("\n")
             # 各行の値をリストに格納        
             sql_result_list = [row.replace("|","").strip() for row in sql_result]
             
             # 結果を追加
             results.append({
                 "work": work_label,
+                "table": table_name,
+                "cnt": table_cnt,
                 "mysql": {
                     "query": sql_query,
                     "result": sql_result_list
@@ -193,6 +241,7 @@ def get_dict_by_key(lst, key):
 def main(target_table = "product"):
     
     out_path = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/relate_tables.txt"
+    debug_path = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/debug.txt"
 
     # echo コマンドを実行してファイルを空にする
     command2 = f'bash -c "echo \'\' > {out_path}"'
@@ -201,15 +250,21 @@ def main(target_table = "product"):
     # JSONファイルを読み込む
     json_file = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/tables.json"  # テーブル構造JSON
     tables = load_table_structure(json_file)
-    table_ids = gen_table_ids(tables)
-    
-    root_tables = find_root_tables(tables)
+    table_result = gen_table_result(tables)
+    root_tables = check_root_tables(tables, table_result)
+    out_put_object(table_result, debug_path)
+
     # print(root_tables)
     # print(tables)
-    for target_table in root_tables:
+    
+    # rootテーブルから処理する。
+    for table, value in table_result.items():
+        if value["type"] != "root":
+            continue
+        print(table)
         # 任意のテーブルを指定してリレーションを探索
         works = read_work()
-        referenced_tables = gen_referenced_table(target_table, tables, works)
+        referenced_tables = gen_referenced_table(table, tables, works, table_result)
         refresh_work(works)
         if referenced_tables == None:
             sys.exit("プログラムを終了します")

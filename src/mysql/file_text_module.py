@@ -100,3 +100,8 @@ def gen_dict_from_csv(file_path):
             # 辞書に追加（値を整数に変換）
             dict[key] = value
     return dict
+
+# 配列を指定の結合文字で結合し、空要素を除外する関数。
+def join_array(elements, separator):
+    # 空要素を除外して結合
+    return separator.join(str(element) for element in elements if element)

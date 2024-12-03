@@ -56,11 +56,11 @@ def dump_to_json(tables, output_file):
         json.dump(tables, f, indent=4, ensure_ascii=False)
     print(f"JSONファイルに変換完了: {output_file}")
 
-def main(input_dump = '../../in/ishiguro/ishiguro_orange_pos_structure.dump', output_json = "../../out/tables.json"):
+def main(input_dump = 'file/table_structure.dump', output_json = "file/tables.json"):
     tables = parse_mysqldump(input_dump)
     print(tables)
     dump_to_json(tables, output_json)
-    out_put_object(tables, "../../out/tables.txt")
+    out_put_object(tables, "file/tables.txt")
 
 # 使用例
 if __name__ == "__main__":

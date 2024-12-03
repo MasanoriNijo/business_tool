@@ -55,7 +55,7 @@ def refresh_work(works):
         work_txt += "+----------------------------+\n"
         work_txt += f"{len(work['mysql']['result'])} rows in set (x.xx sec)\n"
         workTxt += work_txt
-    save_text_to_file(workTxt,"C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/work.txt")
+    save_text_to_file(workTxt,"C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/work.txt",False)
 
 def gen_referenced_table(target_table, tables, works, table_result, visited = [], referenced_tables = {}, poss = []):
     # print(target_table)
@@ -86,12 +86,12 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
         work_['mysql'] = {}
         query = f"select {target_table}_id from {target_table}"
         if parent_work == None:
-            query += f" where deleted_at is null order by updated_at desc limit 10000;"
+            query += f" where deleted_at is null order by updated_at desc limit 200;"
         else:
             parent_table = poss[-2]
             idsTxt = ""
             if parent_work["mysql"]["result"][0] == "ALL":
-                query += f" where deleted_at is null order by updated_at desc limit 10000;"
+                query += f" where deleted_at is null order by updated_at desc limit 200;"
             else:    
                 for id in parent_work["mysql"]["result"]:
                     idsTxt += f"'{id}',"
@@ -126,8 +126,11 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
                 key = table
                 ref.append({key:[{"cnt":value["cnt"]},{"id":[]}]})
                 _poss = poss.copy()
-                _poss.append(table)                    
-                gen_referenced_table(table, tables, works, table_result, visited,referenced_tables, _poss)
+                _poss.append(table)
+                _visited = visited.copy()                  
+                result = gen_referenced_table(table, tables, works, table_result, _visited, referenced_tables, _poss)
+                if result == None:
+                    return None
                     
     return referenced_tables
 
@@ -197,7 +200,7 @@ def read_work():
     matches = re.finditer(pattern, workTxt, re.DOTALL)
     # マッチした内容を表示
     for match in matches:
-        print(match.group())  # マッチした全体を取得
+        # print(match.group())  # マッチした全体を取得
         # workとSQL部分を抽出する正規表現
         pattern = re.compile(r"work:(.*?)\ntable:(.*?)\ncnt:(.*?)\nmysql> (.*?)\n\+-+\+\n.*\n\+-+\+\n(.*?)\n\+-+\+", re.DOTALL)
         # 結果を格納するリスト
@@ -226,7 +229,7 @@ def read_work():
     output_file = "output.json"
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=4, ensure_ascii=False)
-    print(f"JSONファイルに出力しました: {output_file}")
+    # print(f"JSONファイルに出力しました: {output_file}")
     
     return results
 
@@ -240,27 +243,23 @@ def get_dict_by_key(lst, key):
 
 def main(target_table = "product"):
     
-    out_path = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/relate_tables.txt"
+    out_path = 'C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/relate_tables'
     debug_path = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/debug.txt"
-
-    # echo コマンドを実行してファイルを空にする
-    command2 = f'bash -c "echo \'\' > {out_path}"'
-    subprocess.run(command2, shell=True, check=True)
     
     # JSONファイルを読み込む
     json_file = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/tables.json"  # テーブル構造JSON
     tables = load_table_structure(json_file)
     table_result = gen_table_result(tables)
-    root_tables = check_root_tables(tables, table_result)
+    check_root_tables(tables, table_result)
     out_put_object(table_result, debug_path)
 
     # print(root_tables)
-    # print(tables)
-    
+    print(tables)
     # rootテーブルから処理する。
     for table, value in table_result.items():
         if value["type"] != "root":
             continue
+        print("KKK")
         print(table)
         # 任意のテーブルを指定してリレーションを探索
         works = read_work()
@@ -268,12 +267,16 @@ def main(target_table = "product"):
         refresh_work(works)
         if referenced_tables == None:
             sys.exit("プログラムを終了します")
+        # echo コマンドを実行してファイルを空にする
+        command2 = f'bash -c "echo \'\' > {out_path}_{table}.txt"'
+        subprocess.run(command2, shell=True, check=True)
+        out_put_object(referenced_tables, f"{out_path}_{table}.txt")
+        
 
         # print(f"'{target_table}' が参照されるテーブル: {referenced_tables}")
         output_file = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/relate_tables.json"
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(referenced_tables, f, ensure_ascii=False, indent=4)       
-        out_put_object(referenced_tables, out_path)
 
 
 if __name__ == "__main__":

@@ -84,8 +84,10 @@ def out_put_object(obj, file, lvl = 0):
                 out_put_object(value,file,lvl+1)
             else:        
                 save_text_to_file(" " * lvl + key + ": " + value, file,False)
-    else:
+    elif isinstance(obj,str):
         save_text_to_file("  " * lvl + obj,file,False)
+    else:
+        return
 
 # xxx,yyyの2項形式のCSV(ヘッダ無し)をkey:xxx,value:yyyに辞書化する。
 def gen_dict_from_csv(file_path):

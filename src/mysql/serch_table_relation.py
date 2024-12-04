@@ -69,7 +69,7 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
         poss=[target_table]
 
     if target_table in visited:
-        return
+        return referenced_tables
     visited.append(target_table)
     table_pos = join_array(poss,"←")
     work = find_work(table_pos,works)
@@ -256,9 +256,10 @@ def main(target_table = "product"):
     # print(root_tables)
     print(tables)
     # rootテーブルから処理する。
-    for table, value in table_result.items():
-        if value["type"] != "root":
-            continue
+    for table in ["prefecture"]:
+    # for table, value in table_result.items():
+        # if value["type"] != "root":
+        #     continue
         print("KKK")
         print(table)
         # 任意のテーブルを指定してリレーションを探索

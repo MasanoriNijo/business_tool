@@ -4,6 +4,8 @@ import sys
 from file_text_module import out_put_object, read_file, join_array, save_text_to_file
 import subprocess
 
+ROOT_PATH = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql"
+
 def load_table_structure(json_file):
     """JSONからテーブル構造を読み込む"""
     with open(json_file, 'r', encoding='utf-8') as f:
@@ -35,12 +37,15 @@ def find_work(table_pos,works):
             return work
     return None
 
-def refresh_work(works):
-    # echo コマンドを実行してファイルを空にする
-    command2 = f'bash -c "echo \'\' > C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/work.txt"'
-    subprocess.run(command2, shell=True, check=True)
+def refresh_work(works, works_org, all_clear = False):
+    if all_clear:
+        # echo コマンドを実行してファイルを空にする
+        command2 = f'bash -c "echo \'\' > {ROOT_PATH}/file/work.txt"'
+        subprocess.run(command2, shell=True, check=True)
     workTxt = ""
     for work in works:
+        if not all_clear and work in works_org:
+            continue
         # print(work)
         poss = work["work"].split("←")
         work_txt = f"work:{work['work']}\n"
@@ -55,7 +60,10 @@ def refresh_work(works):
         work_txt += "+----------------------------+\n"
         work_txt += f"{len(work['mysql']['result'])} rows in set (x.xx sec)\n"
         workTxt += work_txt
-    save_text_to_file(workTxt,"C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/work.txt",False)
+    save_text_to_file(workTxt, f"{ROOT_PATH}/file/work.txt",False)
+
+def add_comment_to_work(comment):
+    save_text_to_file(comment,f"{ROOT_PATH}/file/work.txt",False)
 
 def gen_referenced_table(target_table, tables, works, table_result, visited = [], referenced_tables = {}, poss = []):
     # print(target_table)
@@ -101,11 +109,17 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
             work_['mysql']['result'] = ["ALL"]         
             works.append(work_)
         else:
-            work_['mysql']['result'] = ["TODO"]         
-            works.append(work_)
-            print("以下処理してください")
-            print(work_)
-            return None
+            same_work = find_work_from_query(query, works)
+            if same_work:
+                work_['mysql']['query'] = same_work['mysql']['query']      
+                work_['mysql']['result'] = same_work['mysql']['result']       
+                works.append(work_)
+            else:
+                work_['mysql']['result'] = ["TODO"]         
+                works.append(work_)
+                print("以下処理してください")
+                print(work_)
+                return None
     
     for table, columns in tables.items():
         if table == target_table:
@@ -166,7 +180,7 @@ def gen_table_result(tables):
     pattern = r"^\|(.*)\| (.*)\|$"
 
     # ファイルを読み込む
-    with open("C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/table_cnt.txt", "r", encoding="utf-8") as file:
+    with open(f"{ROOT_PATH}/file/table_cnt.txt", "r", encoding="utf-8") as file:
         for line in file:
             match = re.match(pattern, line)
             if match:
@@ -190,7 +204,7 @@ def gen_table_ids(tables):
     return table_ids
 
 def read_work():
-    workTxt = read_file("C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/work.txt")
+    workTxt = read_file(f"{ROOT_PATH}/file/work.txt")
     
     # パターン定義: 'work:' から次の 'work:' または文字列の終わりまで
     pattern = r'work:.*?(?=work:|$)'
@@ -233,6 +247,11 @@ def read_work():
     
     return results
 
+def find_work_from_query(query, works):
+    for work in works:
+        if query == work["mysql"]["query"]:
+            return work.copy()
+    return None
 
 # 引数として検索したいキーを渡す関数
 def get_dict_by_key(lst, key):
@@ -243,11 +262,11 @@ def get_dict_by_key(lst, key):
 
 def main(target_table = "product"):
     
-    out_path = 'C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/relate_tables'
-    debug_path = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/debug.txt"
+    out_path = f"{ROOT_PATH}/file/relate_tables"
+    debug_path = f"{ROOT_PATH}/file/debug.txt"
     
     # JSONファイルを読み込む
-    json_file = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/tables.json"  # テーブル構造JSON
+    json_file = f"{ROOT_PATH}/file/tables.json"  # テーブル構造JSON
     tables = load_table_structure(json_file)
     table_result = gen_table_result(tables)
     check_root_tables(tables, table_result)
@@ -256,16 +275,18 @@ def main(target_table = "product"):
     # print(root_tables)
     print(tables)
     # rootテーブルから処理する。
-    for table in ["prefecture"]:
-    # for table, value in table_result.items():
-        # if value["type"] != "root":
-        #     continue
+    add_comment_to_work("# rootテーブルから処理する。")
+    for table, value in table_result.items():
+        if value["type"] != "root":
+            continue
         print("KKK")
+        add_comment_to_work(f"# rootテーブル:{table}")
         print(table)
         # 任意のテーブルを指定してリレーションを探索
-        works = read_work()
+        works_org = read_work()
+        works = works_org.copy()
         referenced_tables = gen_referenced_table(table, tables, works, table_result)
-        refresh_work(works)
+        refresh_work(works,works_org)
         if referenced_tables == None:
             sys.exit("プログラムを終了します")
         # echo コマンドを実行してファイルを空にする
@@ -275,7 +296,7 @@ def main(target_table = "product"):
         
 
         # print(f"'{target_table}' が参照されるテーブル: {referenced_tables}")
-        output_file = "C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/relate_tables.json"
+        output_file = f"{ROOT_PATH}/file/relate_tables.json"
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(referenced_tables, f, ensure_ascii=False, indent=4)       
 

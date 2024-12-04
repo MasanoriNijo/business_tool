@@ -280,7 +280,15 @@ def gen_dump_sql_from_table_result(table_result):
         # print(value)
         if value["sql"] == "ALL":
             allTablesTxt += f" {table}"
-        else:
+            
+    result = allTablesTxt 
+
+    Cnt = 5
+    cnt_ = 0
+    for table, value in table_result.items():
+        # print(table)
+        # print(value)
+        if value["sql"] != "ALL":
             print(table)
             print(value)
             whereTablesTxt += f" {table}"
@@ -288,11 +296,22 @@ def gen_dump_sql_from_table_result(table_result):
             whereTxt += "', '".join(value["id"])
             whereTxt += "') "
             andTxt = " AND "
-    result = allTablesTxt 
-    result += "\n" 
-    result += f"{whereTablesTxt} {whereTxt}"
-    return result
             
+            cnt_ += 1
+            if cnt_ > Cnt:
+                result += "\n" 
+                result += f"{whereTablesTxt} {whereTxt}"
+                
+                # 元に戻す
+                cnt_ = 0
+                whereTablesTxt = ""
+                whereTxt = ""
+                andTxt = ""
+    if whereTablesTxt:      
+        result += "\n" 
+        result += f"{whereTablesTxt} {whereTxt}"
+
+    return result            
 
 def check_column(table_name, column, tables):
     if table_name in tables:

@@ -94,12 +94,18 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
         work_['mysql'] = {}
         query = f"select {target_table}_id from {target_table}"
         if parent_work == None:
-            query += f" where deleted_at is null order by updated_at desc limit 200;"
+            if check_column(target_table,"deleted_at",tables):
+                query += f" where deleted_at is null order by updated_at desc limit 200;"
+            else:
+                query += f" order by updated_at desc limit 200;"
         else:
             parent_table = poss[-2]
             idsTxt = ""
             if parent_work["mysql"]["result"][0] == "ALL":
-                query += f" where deleted_at is null order by updated_at desc limit 200;"
+                if check_column(target_table,"deleted_at",tables):
+                    query += f" where deleted_at is null order by updated_at desc limit 200;"
+                else:
+                    query += f" order by updated_at desc limit 200;"
             else:    
                 for id in parent_work["mysql"]["result"]:
                     idsTxt += f"'{id}',"
@@ -253,6 +259,13 @@ def find_work_from_query(query, works):
             return work.copy()
     return None
 
+def check_column(table_name, column, tables):
+    if table_name in tables:
+        table = tables[table_name]
+        if column in table:
+            return True
+    return False
+
 # 引数として検索したいキーを渡す関数
 def get_dict_by_key(lst, key):
     for d in lst:
@@ -271,6 +284,7 @@ def main(target_table = "product"):
     table_result = gen_table_result(tables)
     check_root_tables(tables, table_result)
     out_put_object(table_result, debug_path)
+    out_put_object(tables, debug_path)
 
     # print(root_tables)
     print(tables)

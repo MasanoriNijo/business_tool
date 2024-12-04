@@ -259,6 +259,41 @@ def find_work_from_query(query, works):
             return work.copy()
     return None
 
+def update_table_result_from_work(table_result, works):
+    for work in works:
+        table_result[work["table"]]["id"] += work["mysql"]["result"]
+    
+    # idの重複をする。
+    for table, value in table_result.items():
+        ids_ = list(set(value["id"]))
+        value["id"].clear()
+        value["id"] += ids_
+        value["id_cnt"] = len(ids_)
+
+def gen_dump_sql_from_table_result(table_result):
+    allTablesTxt = ""
+    whereTablesTxt = ""
+    whereTxt = ""
+    andTxt = ""
+    for table, value in table_result.items():
+        # print(table)
+        # print(value)
+        if value["sql"] == "ALL":
+            allTablesTxt += f" {table}"
+        else:
+            print(table)
+            print(value)
+            whereTablesTxt += f" {table}"
+            whereTxt += f"{andTxt}{table}_id IN ('"
+            whereTxt += "', '".join(value["id"])
+            whereTxt += "') "
+            andTxt = " AND "
+    result = allTablesTxt 
+    result += "\n" 
+    result += f"{whereTablesTxt} {whereTxt}"
+    return result
+            
+
 def check_column(table_name, column, tables):
     if table_name in tables:
         table = tables[table_name]
@@ -293,7 +328,6 @@ def main(target_table = "product"):
     for table, value in table_result.items():
         if value["type"] != "root":
             continue
-        print("KKK")
         add_comment_to_work(f"# rootテーブル:{table}")
         print(table)
         # 任意のテーブルを指定してリレーションを探索
@@ -308,12 +342,28 @@ def main(target_table = "product"):
         subprocess.run(command2, shell=True, check=True)
         out_put_object(referenced_tables, f"{out_path}_{table}.txt")
         
-
+        
         # print(f"'{target_table}' が参照されるテーブル: {referenced_tables}")
         output_file = f"{ROOT_PATH}/file/relate_tables.json"
         with open(output_file, "w", encoding="utf-8") as f:
             json.dump(referenced_tables, f, ensure_ascii=False, indent=4)       
 
+    update_table_result_from_work(table_result, works)
+    
+    # ダンプ用文字列を生成
+    command = f'bash -c "echo \'\' > {ROOT_PATH}/file/dump_where.txt"'
+    subprocess.run(command, shell=True, check=True)
+    dumpTxt = gen_dump_sql_from_table_result(table_result)
+    save_text_to_file(dumpTxt,f"{ROOT_PATH}/file/dump_where.txt")
+    
+    # echo コマンドを実行してファイルを空にする
+    command = f'bash -c "echo \'\' > {ROOT_PATH}/file/table_result.txt"'
+    subprocess.run(command, shell=True, check=True)
+    command = f'bash -c "echo \'\' > {ROOT_PATH}/file/works_result.txt"'
+    subprocess.run(command, shell=True, check=True)
+    out_put_object(table_result, f"{ROOT_PATH}/file/table_result.txt")
+    out_put_object(works, f"{ROOT_PATH}/file/works_result.txt")
+    
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

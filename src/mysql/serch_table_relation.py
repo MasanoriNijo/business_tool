@@ -270,7 +270,7 @@ def update_table_result_from_work(table_result, works):
         value["id"] += ids_
         value["id_cnt"] = len(ids_)
 
-def gen_dump_sql_from_table_result(table_result):
+def gen_dump_sql_from_table_result(table_result, last_command = "| gzip > ishigro_stg_orange_pos_@@@@.$(date +%Y%m%d)dump.gz"):
     allTablesTxt = ""
     whereTablesTxt = ""
     whereTxt = ""
@@ -280,10 +280,10 @@ def gen_dump_sql_from_table_result(table_result):
         # print(value)
         if value["sql"] == "ALL":
             allTablesTxt += f" {table}"
-            
-    result = allTablesTxt 
+    last_command_ = last_command.replace("@@@@", "select_all_tables")
+    result = f"{allTablesTxt} {last_command_}"
 
-    Cnt = 5
+    Cnt = 0
     cnt_ = 0
     for table, value in table_result.items():
         # print(table)
@@ -299,17 +299,16 @@ def gen_dump_sql_from_table_result(table_result):
             
             cnt_ += 1
             if cnt_ > Cnt:
-                result += "\n" 
-                result += f"{whereTablesTxt} {whereTxt}"
+                last_command_ = last_command.replace("@@@@", f"{table}_partial")
+                result += f"\n{whereTablesTxt} --where=\"{whereTxt}\" {last_command_}"
                 
                 # 元に戻す
                 cnt_ = 0
                 whereTablesTxt = ""
                 whereTxt = ""
                 andTxt = ""
-    if whereTablesTxt:      
-        result += "\n" 
-        result += f"{whereTablesTxt} {whereTxt}"
+    # if whereTablesTxt:      
+    #     result += f"\n{whereTablesTxt} --where=\"{whereTxt}\""
 
     return result            
 

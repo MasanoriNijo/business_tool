@@ -83,9 +83,11 @@ def out_put_object(obj, file, lvl = 0):
                 save_text_to_file(" " * lvl + key, file,False)
                 out_put_object(value,file,lvl+1)
             else:        
-                save_text_to_file(" " * lvl + key + ": " + value, file,False)
+                save_text_to_file(" " * lvl + key + ": " + str(value), file,False)
     elif isinstance(obj,str):
         save_text_to_file("  " * lvl + obj,file,False)
+    elif isinstance(obj,int):
+        save_text_to_file("  " * lvl + str(obj),file,False)
     else:
         return
 

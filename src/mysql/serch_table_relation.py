@@ -101,18 +101,12 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
         else:
             parent_table = poss[-2]
             idsTxt = ""
-            if parent_work["mysql"]["result"][0] == "ALL":
-                if check_column(target_table,"deleted_at",tables):
-                    query += f" where deleted_at is null order by updated_at desc limit 200;"
-                else:
-                    query += f" order by updated_at desc limit 200;"
-            else:    
-                for id in parent_work["mysql"]["result"]:
-                    idsTxt += f"'{id}',"
-                query += f" where {parent_table}_id in ({idsTxt[:-1]});"
+            for id in parent_work["mysql"]["result"]:
+                idsTxt += f"'{id}',"
+            query += f" where {parent_table}_id in ({idsTxt[:-1]}) order by {target_table}_id desc;"
         work_['mysql']['query'] = query
-        if int(work_['cnt']) < 10000:            
-            work_['mysql']['result'] = ["ALL"]         
+        if parent_work["mysql"]["result"][0] == "EMPTY":            
+            work_['mysql']['result'] = ["EMPTY"]         
             works.append(work_)
         else:
             same_work = find_work_from_query(query, works)
@@ -270,7 +264,7 @@ def update_table_result_from_work(table_result, works):
         value["id"] += ids_
         value["id_cnt"] = len(ids_)
 
-def gen_dump_sql_from_table_result(table_result, last_command = "| gzip > ishigro_stg_orange_pos_@@@@.$(date +%Y%m%d)dump.gz"):
+def gen_dump_sql_from_table_result(table_result, last_command = "| gzip > ishigro_stg_orange_pos_@@@@.$(date +%Y%m%d).dump.gz"):
     allTablesTxt = ""
     whereTablesTxt = ""
     whereTxt = ""
@@ -326,7 +320,7 @@ def get_dict_by_key(lst, key):
             return d[key]
     return None  # 見つからない場合は None を返す
 
-def main(target_table = "product"):
+def main(target_table = ""):
     
     out_path = f"{ROOT_PATH}/file/relate_tables"
     debug_path = f"{ROOT_PATH}/file/debug.txt"
@@ -341,12 +335,19 @@ def main(target_table = "product"):
 
     # print(root_tables)
     print(tables)
-    # rootテーブルから処理する。
+    # rootテーブルから処理する。target_tableの場合は、その限りでない。
     add_comment_to_work("# rootテーブルから処理する。")
     for table, value in table_result.items():
-        if value["type"] != "root":
-            continue
-        add_comment_to_work(f"# rootテーブル:{table}")
+        if target_table:
+            if table != target_table:
+                continue
+        else:
+            if value["type"] != "root":
+                continue
+        if target_table:
+            add_comment_to_work(f"# ターゲットテーブル:{table}")
+        else:
+            add_comment_to_work(f"# rootテーブル:{table}")
         print(table)
         # 任意のテーブルを指定してリレーションを探索
         works_org = read_work()

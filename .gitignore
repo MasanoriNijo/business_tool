@@ -21,3 +21,5 @@ out/
 *.pyo
 __pycache__/
 *.txt
+*.json
+*.dump

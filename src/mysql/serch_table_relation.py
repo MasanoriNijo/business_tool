@@ -70,10 +70,10 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
     # print(referenced_tables)
     # print(poss)
     if not referenced_tables:
-        cnt_ = next(iter(tables[target_table].items()))
+        cnt_ = tables[target_table]["cnt"]
         # print('BBB')
         # print(cnt_)
-        referenced_tables = [{target_table:[{"cnt":cnt_[1]["cnt"]},{"id":[]}]}]
+        referenced_tables = {target_table:{"cnt":cnt_,"id":[],"child":{}}}
         poss=[target_table]
 
     if target_table in visited:
@@ -105,7 +105,7 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
                 idsTxt += f"'{id}',"
             query += f" where {parent_table}_id in ({idsTxt[:-1]}) order by {target_table}_id desc;"
         work_['mysql']['query'] = query
-        if parent_work["mysql"]["result"][0] == "EMPTY":            
+        if parent_work != None and parent_work["mysql"]["result"][0] == "EMPTY":            
             work_['mysql']['result'] = ["EMPTY"]         
             works.append(work_)
         else:
@@ -120,25 +120,51 @@ def gen_referenced_table(target_table, tables, works, table_result, visited = []
                 print("以下処理してください")
                 print(work_)
                 return None
+    else:
+        ref = referenced_tables
+        print(ref)
+        print(poss)
+        print(work)
+        is_root = True
+        for table in poss:
+            if is_root:
+                ref = ref[table]
+            else:
+                ref = ref['child'][table]
+            is_root = False
+        ref["id"] = work['mysql']['result']
     
-    for table, columns in tables.items():
+    for table, value in tables.items():
         if table == target_table:
             continue
 
-        for column, value in columns.items():
+        for column, value in value["columns"].items():
             if column == target_table + "_id":
                 ref = referenced_tables
-                n=0           
+                n=0
+                print("zz")
+                print(poss)
+                is_root = True         
                 for pos in poss:
                     # print(n)
                     # print(pos)
                     # print(ref)
-                    ref = get_dict_by_key(ref,pos)
+                    print("zzz")
+                    print(pos)
+                    print(ref)
+                    if is_root:
+                        ref = ref[pos]
+                    else:
+                        ref = ref['child'][pos]
+                    is_root = False
+                        
                     # print(ref)
                     n+=1
                 # print(value)
-                key = table
-                ref.append({key:[{"cnt":value["cnt"]},{"id":[]}]})
+                cnt_ = tables[table]["cnt"]
+                print("sss")
+                print(ref)
+                ref["child"][table] = {"cnt":cnt_,"id":[],"child":{}}
                 _poss = poss.copy()
                 _poss.append(table)
                 _visited = visited.copy()                  
@@ -277,30 +303,27 @@ def gen_dump_sql_from_table_result(table_result, last_command = "| gzip > ishigr
     last_command_ = last_command.replace("@@@@", "select_all_tables")
     result = f"{allTablesTxt} {last_command_}"
 
-    Cnt = 0
-    cnt_ = 0
     for table, value in table_result.items():
         # print(table)
         # print(value)
+        # 初期化
+        whereTablesTxt = ""
+        whereTxt = ""
         if value["sql"] != "ALL":
             print(table)
             print(value)
+            if len(value["id"]) == 0:
+                continue
+            if value["id"][0] == "EMPTY":
+                continue          
             whereTablesTxt += f" {table}"
             whereTxt += f"{andTxt}{table}_id IN ('"
             whereTxt += "', '".join(value["id"])
             whereTxt += "') "
-            andTxt = " AND "
             
-            cnt_ += 1
-            if cnt_ > Cnt:
-                last_command_ = last_command.replace("@@@@", f"{table}_partial")
-                result += f"\n{whereTablesTxt} --where=\"{whereTxt}\" {last_command_}"
-                
-                # 元に戻す
-                cnt_ = 0
-                whereTablesTxt = ""
-                whereTxt = ""
-                andTxt = ""
+            last_command_ = last_command.replace("@@@@", f"{table}_partial")
+            result += f"\n{whereTablesTxt} --where=\"{whereTxt}\" {last_command_}"
+            
     # if whereTablesTxt:      
     #     result += f"\n{whereTablesTxt} --where=\"{whereTxt}\""
 
@@ -315,6 +338,8 @@ def check_column(table_name, column, tables):
 
 # 引数として検索したいキーを渡す関数
 def get_dict_by_key(lst, key):
+    print(lst)
+    print(key)
     for d in lst:
         if key in d:  # 辞書に指定のキーが含まれるか確認
             return d[key]
@@ -322,7 +347,7 @@ def get_dict_by_key(lst, key):
 
 def main(target_table = ""):
     
-    out_path = f"{ROOT_PATH}/file/relate_tables"
+    out_path = f"{ROOT_PATH}/file/relate_tables/relate_tables"
     debug_path = f"{ROOT_PATH}/file/debug.txt"
     
     # JSONファイルを読み込む
@@ -335,8 +360,11 @@ def main(target_table = ""):
 
     # print(root_tables)
     print(tables)
-    # rootテーブルから処理する。target_tableの場合は、その限りでない。
-    add_comment_to_work("# rootテーブルから処理する。")
+    # target_tableを指定しない場合は、rootテーブル全件を処理する。
+    if target_table:
+        add_comment_to_work("# rootテーブル全件処理")
+    else:
+        add_comment_to_work(f"# {table}テーブル処理")
     for table, value in table_result.items():
         if target_table:
             if table != target_table:
@@ -360,8 +388,7 @@ def main(target_table = ""):
         command2 = f'bash -c "echo \'\' > {out_path}_{table}.txt"'
         subprocess.run(command2, shell=True, check=True)
         out_put_object(referenced_tables, f"{out_path}_{table}.txt")
-        
-        
+
         # print(f"'{target_table}' が参照されるテーブル: {referenced_tables}")
         output_file = f"{ROOT_PATH}/file/relate_tables.json"
         with open(output_file, "w", encoding="utf-8") as f:

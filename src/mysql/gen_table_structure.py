@@ -34,19 +34,19 @@ def parse_mysqldump(filename):
                 columns[column_match.group('name')] = {}
                 columns[column_match.group('name')]["type"] =  column_match.group('type')
                 
-                cnt = "xxx"
-                if table_name in table_cnt:
-                    cnt = table_cnt[table_name]
-                columns[column_match.group('name')]["cnt"] = cnt
-                    
                 # columns.append({
                 #     "column_name": column_match.group('name'),
                 #     "column_type": column_match.group('type')
                 # })
         
-        # 結果を辞書に追加
-        tables[table_name] = columns
+        # データ件数を取得
+        cnt = "-1" # 初期値は-1
+        if table_name in table_cnt:
+            cnt = table_cnt[table_name]
 
+        # 結果を辞書に追加
+        tables[table_name] = {"cnt":cnt,"columns":columns}
+ 
     return tables
 
 

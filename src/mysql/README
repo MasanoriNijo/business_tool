@@ -1,0 +1,46 @@
+
+データ取得ツール
+
+ORANGE POSのSTG(PRD)環境のDBを、ローカルに取り込む際に、データを絞って取得するためのツール
+
+手順
+1, 対象DBのテーブル構造のみのダンプを取得する。
+$ mysqldump -u youser_name -p target_database --no-data > db.dump
+
+sample
+# mysqldump -u root -p orange_pos --no-data > ishiguro_orange_pos_structure.dump
+$ mysqldump -u admin -h stg-ishiguro-db01.crx3rtja2ldw.ap-northeast-1.rds.amazonaws.com -p --skip-lock-tables --no-tablespaces orange_pos --no-data | gzip > ishigro_stg_orange_pos_struct_20241202.dump.gz
+
+1-2, 取得したファイルをsrc\mysql\file\table_structure.dumpに保存。「
+
+2, すべてのテーブルの件数を概算で取得
+mysql> SELECT TABLE_NAME AS table_name, TABLE_ROWS AS row_count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'orange_pos';
+
+sample
+mysql> SELECT TABLE_NAME AS table_name, TABLE_ROWS AS row_count FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'orange_pos';
++--------------------------------------------------+-----------+
+| table_name                                       | row_count |
++--------------------------------------------------+-----------+
+| SequelizeMeta                                    |       465 |
+| admin_log                                        |      5199 |
+| admin_log_item                                   |     72404 |
+,,,,
+| warehouse_translation                            |       123 |
+| yoy_daily_sales_summary                          |    341274 |
+| yoy_date                                         |       790 |
+| yoy_monthly_sales_summary                        |     11803 |
++--------------------------------------------------+-----------+
+234 rows in set (0.40 sec)
+
+2.2 取得したファイルを、カンマ(,)区切りに成型しsrc\mysql\file\tables_cnt.txtに保存。
+
+
+3, 以下のコマンドを実行して、テーブル構造をjson化して保存
+$ python3 gen_table_structure.py
+
+保存先は、src\mysql\file\tables.jsonとsrc\mysql\file\tables.txt になります。
+
+4, 以下のコマンドで、出力させるデータを対話型処理で逐次実行
+$ python3 serch_table_relation.py
+
+// TODO

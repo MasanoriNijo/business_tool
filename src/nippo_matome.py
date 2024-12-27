@@ -77,6 +77,12 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
                 # この場合は改行に内容が書かれている場合なので、追記する。
                 buf[-1] += mltxt
         else: # 処理対象の始まりを判定する
+            
+            timeRegix = "開始:(\d{1,2}:\d{1,2}) - 終了:(\d{1,2}:\d{1,2}) (\([\d.]*\))"
+            timeMatch = re.match(timeRegix, mltxt)
+            if timeMatch:
+                append_text_to_file(f"{timeMatch[1]}-{timeMatch[2]}{timeMatch[3]}", f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_ALL_FILE']}")      
+                
             match = re.match("^" + komokuRegexs[0] + "(.*)", mltxt)
             if match:
                 startFlg = True

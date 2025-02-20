@@ -1,0 +1,72 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.animation as animation
+import matplotlib
+
+matplotlib.rc('font', family='MS Gothic')
+
+# パラメータ設定
+c = 1  # 光速（相対的な単位）
+v = 0.6 * c  # 宇宙船の速度
+L = 5  # 宇宙船の高さ
+frames = 50  # アニメーションのフレーム数
+
+# 図の設定
+fig, ax = plt.subplots(1, 2, figsize=(12, 5))
+ax[0].set_xlim(-2, 2)
+ax[0].set_ylim(0, L)
+ax[1].set_xlim(-2, 2 + v * (frames / 10))
+ax[1].set_ylim(0, L)
+ax[0].set_title("宇宙船内の光の動き")
+ax[1].set_title("地上から見た光の動き")
+
+# 宇宙船の描画
+ship_rect = plt.Rectangle((-1, 0), 2, L, fill=False, color='gray')
+ax[0].add_patch(ship_rect)
+
+# 鏡の描画
+top_mirror = ax[0].plot(0, L, 'ks', markersize=10)[0]
+bottom_mirror = ax[0].plot(0, 0, 'ks', markersize=10)[0]
+
+top_mirror_g = ax[1].plot(0, L, 'ks', markersize=10)[0]
+bottom_mirror_g = ax[1].plot(0, 0, 'ks', markersize=10)[0]
+
+# 光の動き
+light, = ax[0].plot([], [], 'ro', markersize=5)
+light_g, = ax[1].plot([], [], 'ro', markersize=5)
+
+# 時計の表示
+time_text_ship = ax[0].text(0, L * 0.8, "", fontsize=12, ha="center", color="blue")
+time_text_ground = ax[1].text(0, L * 0.8, "", fontsize=12, ha="center", color="blue")
+
+# アニメーションの更新関数
+def update(frame):
+    t = frame / 10  # 時間スケール調整
+    cycle_time = (2 * L) / c  # 光が一往復する時間
+    phase = (t % cycle_time) / cycle_time  # どのフェーズにいるか（0.0〜1.0）
+
+    # 光の位置を決定（反射考慮）
+    if phase < 0.5:
+        y = phase * 2 * L  # 上昇
+    else:
+        y = 2 * L * (1 - phase)  # 下降
+
+    # 宇宙船内の光の動き
+    light.set_data([0], [y])
+
+    # 地上から見た場合（宇宙船の移動を考慮）
+    x_g = v * t  # 宇宙船の移動
+    light_g.set_data([x_g], [y])
+
+    # 時計の更新
+    time_text_ship.set_text(f"時刻: {t:.1f} s")
+    time_text_ground.set_text(f"時刻: {t:.1f} s")
+
+    time_text_ship.set_position((0, L * 0.8))
+    time_text_ground.set_position((x_g, L * 0.8))
+
+    return light, light_g, time_text_ship, time_text_ground
+
+# アニメーション作成
+ani = animation.FuncAnimation(fig, update, frames=frames, interval=50, blit=True)
+plt.show()

@@ -100,23 +100,23 @@ ax[0].add_patch(ship_rect)
 ax[1].add_patch(ship_rect_g)
 
 # 鏡の描画
-top_mirror = ax[0].plot(0, L, 'ks', markersize=10)[0]
-bottom_mirror = ax[0].plot(0, 0, 'ks', markersize=10)[0]
+top_mirror = ax[0].plot(0, L, 'ks', markersize=20)[0]
+bottom_mirror = ax[0].plot(0, 0, 'ks', markersize=20)[0]
 
-top_mirror_g = ax[1].plot(0, L, 'ks', markersize=10)[0]
-bottom_mirror_g = ax[1].plot(0, 0, 'ks', markersize=10)[0]
+top_mirror_g = ax[1].plot(0, L, 'ks', markersize=20)[0]
+bottom_mirror_g = ax[1].plot(0, 0, 'ks', markersize=20)[0]
 
 # 光の描画
-light, = ax[0].plot([], [], 'ro', markersize=5)
-light_g, = ax[1].plot([], [], 'ro', markersize=5)
+light, = ax[0].plot([], [], 'ro', markersize=12)
+light_g, = ax[1].plot([], [], 'ro', markersize=12)
 
 # 光の位置を初期化
 light.set_data([0], [0])
 light_g.set_data([0], [0])
 
 # 時計
-time_text_ship = ax[0].text(0, L * 0.8, "", fontsize=20, ha="left", color="blue")
-time_text_ground = ax[1].text(0, L * 0.8, "", fontsize=20, ha="left", color="blue")
+time_text_ship = ax[0].text(0, L * 0.8, "", fontsize=24, ha="left", color="blue")
+time_text_ground = ax[1].text(0, L * 0.8, "", fontsize=24, ha="left", color="blue")
 
 # stopFlg
 stop_r = False

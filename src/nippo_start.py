@@ -12,46 +12,10 @@ config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/conf/config.j
 IMAP_SERVER = config["IMAP_SERVER"]
 IMAP_PORT = config["IMAP_PORT"]
 EMAIL_ACCOUNT = config["EMAIL_ACCOUNT"]  # 自分のGmailアドレス
-PASSWORD = config["PASSWORD"]  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
+PASSWORD = config["PASSWORD"]  # 自分のGmailのパスワード
+APLI_PASSWORD = config["APLI_PASSWORD"]  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
 
 remoteFlg = True  # リモート勤務の場合True
-
-# Gmailへ下書きを作成する。
-# def create_draft(subject, body):    
-#     # メールの作成
-#     msg = MIMEMultipart()
-#     msg['From'] = EMAIL_ACCOUNT
-#     msg['To'] = 'k@s-cubism.jp, d_system_support@s-cubism.jp'  # 宛先
-#     msg['Subject'] = subject
-
-#     # メール本文を追加
-#     msg.attach(MIMEText(body, 'plain'))
-
-#     # メールをIMAPサーバに送信
-#     try:
-#         # SSLコンテキストを作成してIMAPサーバに接続
-#         context = ssl.create_default_context()
-#         with imaplib.IMAP4_SSL(IMAP_SERVER, IMAP_PORT, ssl_context=context) as mail:
-#             mail.login(EMAIL_ACCOUNT, PASSWORD)
-#             mail.select('inbox')  # 'inbox'フォルダを選択（必要に応じて変更）
-
-#             # メールデータの変換
-#             raw_message = msg.as_string()
-            
-#             # タイムゾーンを含んだ現在日時（aware datetime）
-#             tz = pytz.timezone('Asia/Tokyo')  # 自分のタイムゾーンに合わせて変更
-#             now = datetime.now(tz)
-
-#             # 下書きフォルダに保存
-#             result = mail.append('[Gmail]/&Tgtm+DBN-', '\\Draft', imaplib.Time2Internaldate(now), raw_message.encode('utf-8'))
-                
-#             if result[0] == 'OK':
-#                 print("下書きを作成しました")
-#             else:
-#                 print(f"下書きの作成に失敗しました: {result}")
-
-#     except Exception as e:
-#         print(f"エラーが発生しました: {e}")
 
 def get_japanese_weekday(date):
     # 曜日の英語表記から日本語表記へのマッピング
@@ -79,8 +43,8 @@ def main():
     subject = f"【勤怠連絡】{current_date} 二條 {'リモート' if remoteFlg else '出社'}"
 
     keyword_regex = "^Re: 【勤怠連絡】\d{4}/\d{1,2}/\d{1,2} [日月火水木金土] 二條 (リモート|出社)$"
-    mail = connect_to_email_server(EMAIL_ACCOUNT, PASSWORD)
-    filtered_emails = filter_emails_by_subject(mail, 7, folder = "[Gmail]/&kAFP4W4IMH8w4TD8MOs-", keyword_regex = keyword_regex)
+    mail = connect_to_email_server(EMAIL_ACCOUNT, APLI_PASSWORD)
+    filtered_emails = filter_emails_by_subject(mail, 14, folder = "[Gmail]/&kAFP4W4IMH8w4TD8MOs-", keyword_regex = keyword_regex)
     subjects = filtered_emails[1]
     print(subjects)
     if len(filtered_emails[0]):
@@ -111,9 +75,9 @@ def main():
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:
-     # 最初の要素はスクリプト名なので、それ以降を取得
-     if sys.argv[1] == "s":
-         remoteFlg = False
+    # 最初の要素はスクリプト名なので、それ以降を取得
+        if sys.argv[1] == "s":
+            remoteFlg = False
     main()
 
 # python3 nippo_start.py s // 出社の場合は引数にsを追記

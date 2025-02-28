@@ -8,7 +8,7 @@ import pytz
 import sys
 import re
 from util.config_reader import load_config
-from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email
+from util.mail_module import connect_to_gmail, connect_to_email_server, filter_emails_by_subject, extract_text_from_email
 from util.backlog_module import fetch_backlog_tickets, fetch_backlog_comments, summarize_tickets, invert_dicｔ, remove_empty_lines
 from util.nippo import Nippo
 from util.file_text_module import save_text_to_file
@@ -43,7 +43,8 @@ def main():
     nippo = Nippo()
     
     keyword_regex = "^【勤怠連絡】\d{4}/\d{1,2}/\d{1,2} [日月火水木金土] 二條 (リモート|出社)$"
-    mail = connect_to_email_server(EMAIL_ACCOUNT, PASSWORD)
+    # mail = connect_to_email_server(EMAIL_ACCOUNT, PASSWORD)
+    mail = connect_to_gmail()
     filtered_emails = filter_emails_by_subject(mail, 7, folder = "[Gmail]/&kAFP4W4IMH8w4TD8MOs-", keyword_regex = keyword_regex)
     subjects = filtered_emails[1]
     print(subjects[-1])

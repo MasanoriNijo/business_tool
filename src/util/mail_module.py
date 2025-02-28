@@ -11,17 +11,92 @@ from email.header import decode_header
 import ssl
 import re
 
-# メールサーバに接続
-def connect_to_email_server(username, password, imap_server="imap.gmail.com"):
-    mail = imaplib.IMAP4_SSL(imap_server)
-    
+import os
+import pickle
+import base64
+import imaplib
+from google_auth_oauthlib.flow import InstalledAppFlow
+from google.auth.transport.requests import Request
+from util.config_reader import load_config
+config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/conf/config.json")
+
+# 認証情報ファイル（ダウンロードした JSON のパス）url: https://console.cloud.google.com/auth/clients/854558543161-7cirncc5vnn5d2s6k7cidjahho1o3is9.apps.googleusercontent.com?inv=1&invt=AbqvkQ&project=resonant-rock-452210-b2
+CLIENT_SECRET_FILE = config["CLIENT_SECRET_FILE"]
+# スコープ（Gmail の IMAP アクセス）
+SCOPES = config["SCOPES"]
+EMAIL_ACCOUNT = config["EMAIL_ACCOUNT"]
+GMAIL_CLIENT_ID = config["GMAIL_CLIENT_ID"]
+
+# 現在のスクリプトのディレクトリを取得
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# token.pickleを相対パスで指定
+TOKEN_PATH = os.path.join(BASE_DIR, "../conf/token.pickle")
+
+def get_oauth2_token():
+    creds = None
+    # 以前の認証情報を読み込む
+    if os.path.exists(TOKEN_PATH):
+        with open(TOKEN_PATH, "rb") as token:
+            creds = pickle.load(token)
+            print(f"refresh_token:{creds.refresh_token}")
+
+    # 認証情報がない場合は新規認証
+    if not creds or not creds.valid:
+        print("A")
+        if creds and creds.expired and creds.refresh_token:
+            print("B")
+            creds.refresh(Request())
+        else:
+            print("C")
+            flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
+            creds = flow.run_local_server(port=0)
+
+        # トークンを保存
+        with open(TOKEN_PATH, "wb") as token:
+            pickle.dump(creds, token)
+            
+    print(f"refresh_token:{creds.refresh_token}")
+    print("Access Token:", creds.token)
+    return creds
+
+def connect_to_gmail():
     try:
-        mail.login(username, password)
+        creds = get_oauth2_token()
+        # auth_string = "user={}\\1auth=Bearer {}\\1\\1".format(EMAIL_ACCOUNT, creds.token)
+        auth_string = f"user={EMAIL_ACCOUNT}\x01auth=Bearer {creds.token}\x01\x01"
+        print(auth_string)
+        # auth_string = base64.b64encode(auth_string.encode("utf-8")).decode("utf-8")
+        print(auth_string)
+        mail = imaplib.IMAP4_SSL("imap.gmail.com", 993)
+        # mail.debug = 4  # デバッグ情報を表示
+        mail.authenticate("XOAUTH2", lambda _: auth_string.encode("utf-8"))
+        print("ログイン成功")
+        return mail
+    
     except imaplib.IMAP4.error as e:
         print(f"ログイン失敗: {e}")
         raise
+
+    # 実行サンプル
+    # mail = connect_to_gmail()
+    # mail.select("INBOX")  # 受信トレイを選択
+
+# メールサーバに接続
+def connect_to_email_server(username, password, imap_server="imap.gmail.com", imap_port="993"):
     
-    return mail
+    return connect_to_gmail()
+    
+    # 以下の認証ではログインできなくなったので、上に変更.
+    # mail = imaplib.IMAP4_SSL(imap_server,imap_port)
+    # print(username)
+    # print(password)
+    # try:
+    #     mail.login(username, password)
+    # except imaplib.IMAP4.error as e:
+    #     print(f"ログイン失敗: {e}")
+    #     raise
+    
+    # return mail
 
 # メールの件名を正規表現でフィルタリング
 def filter_emails_by_subject(mail, n_days_ago, folder="inbox", keyword_regex=".*"):
@@ -83,8 +158,8 @@ def list_folders(email_account, email_password, imap_server, imap_port):
     try:
         # SSLコンテキストを作成してIMAPサーバに接続
         context = ssl.create_default_context()
-        with imaplib.IMAP4_SSL(imap_server, imap_port, ssl_context=context) as mail:
-            mail.login(email_account, email_password)
+        with connect_to_gmail() as mail:
+            # mail.login(email_account, email_password)
             
             # 利用可能なフォルダ（ラベル）を一覧表示
             result, folders = mail.list()
@@ -112,8 +187,8 @@ def create_draft(email_account, password, subject, body, imap_server, imap_port)
     try:
         # SSLコンテキストを作成してIMAPサーバに接続
         context = ssl.create_default_context()
-        with imaplib.IMAP4_SSL(imap_server, imap_port, ssl_context=context) as mail:
-            mail.login(email_account, password)
+        with connect_to_gmail() as mail:
+            # mail.login(email_account, password)
             mail.select('inbox')  # 'inbox'フォルダを選択（必要に応じて変更）
 
             # メールデータの変換

@@ -11,6 +11,7 @@ import ssl
 import pytz
 import copy
 import subprocess
+from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email, create_draft
 
 from util.config_reader import load_config
 config = load_config("C:/Users/masanori.nijo/Documents/chatGpt/src/conf/config.json")
@@ -18,24 +19,6 @@ IMAP_SERVER = config["IMAP_SERVER"]
 IMAP_PORT = config["IMAP_PORT"]
 EMAIL_ACCOUNT = config["EMAIL_ACCOUNT"]  # 自分のGmailアドレス
 PASSWORD = config["PASSWORD"]  # アプリパスワードを使用（通常のパスワードではなく、2段階認証のアプリパスワード）
-
-# メールサーバに接続
-def connect_to_email_server(username, password, imap_server="imap.gmail.com"):
-    mail = imaplib.IMAP4_SSL(imap_server)
-    
-    try:
-        mail.login(username, password)
-        # 参照可能なフォルダ名を取得したい場合は、コメントアウト
-        # status, folders = mail.list()
-        # if status == "OK":
-            # for folder in folders:
-            #     print(folder.decode())
-    except imaplib.IMAP4.error as e:
-        print(f"ログイン失敗: {e}")
-        raise
-    
-    return mail
-
 
 # メールの件名を正規表現でフィルタリング
 def filter_emails_by_subject(mail, n_days_ago, folder="inbox", keyword_regex=".*", is_newest_first = False, max_cnt = -1):
@@ -239,7 +222,7 @@ def days_ago(x, y, same_year = True, endFlg = False):
     # 年をまたいでいるので再度計算
     return days_ago(x, y, False, True)
 
-def create_draft(subject, body, pattern):
+def create_draft_xx(subject, body, pattern):
     """Gmailに下書きを作成する関数"""
     
     # メールの作成
@@ -350,11 +333,11 @@ def get_japanese_weekday(date):
     
 # メイン処理
 def main(username, password, draftMade):
-     
+    
     command2 = ['bash', '-c', 'echo "" > C:/Users/masanori.nijo/Documents/chatGpt/out/syuho_all.txt']
     # コマンドの実行
     subprocess.run(command2, check=True)
-     
+
     # echo コマンドを実行してファイルを空にする
     command3 = ['bash', '-c', 'echo "" > C:/Users/masanori.nijo/Documents/chatGpt/out/syuho_matome.txt']
     # コマンドの実行

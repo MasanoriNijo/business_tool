@@ -38,16 +38,16 @@ def get_oauth2_token():
     if os.path.exists(TOKEN_PATH):
         with open(TOKEN_PATH, "rb") as token:
             creds = pickle.load(token)
-            print(f"refresh_token:{creds.refresh_token}")
+            # print(f"refresh_token:{creds.refresh_token}")
 
     # 認証情報がない場合は新規認証
     if not creds or not creds.valid:
-        print("A")
+        # print("A")
         if creds and creds.expired and creds.refresh_token:
-            print("B")
+            # print("B")
             creds.refresh(Request())
         else:
-            print("C")
+            # print("C")
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
             creds = flow.run_local_server(port=0)
 
@@ -55,8 +55,8 @@ def get_oauth2_token():
         with open(TOKEN_PATH, "wb") as token:
             pickle.dump(creds, token)
             
-    print(f"refresh_token:{creds.refresh_token}")
-    print("Access Token:", creds.token)
+    # print(f"refresh_token:{creds.refresh_token}")
+    # print("Access Token:", creds.token)
     return creds
 
 def connect_to_gmail():
@@ -64,13 +64,11 @@ def connect_to_gmail():
         creds = get_oauth2_token()
         # auth_string = "user={}\\1auth=Bearer {}\\1\\1".format(EMAIL_ACCOUNT, creds.token)
         auth_string = f"user={EMAIL_ACCOUNT}\x01auth=Bearer {creds.token}\x01\x01"
-        print(auth_string)
         # auth_string = base64.b64encode(auth_string.encode("utf-8")).decode("utf-8")
-        print(auth_string)
+        # print(auth_string)
         mail = imaplib.IMAP4_SSL("imap.gmail.com", 993)
-        # mail.debug = 4  # デバッグ情報を表示
         mail.authenticate("XOAUTH2", lambda _: auth_string.encode("utf-8"))
-        print("ログイン成功")
+        # print("ログイン成功")
         return mail
     
     except imaplib.IMAP4.error as e:

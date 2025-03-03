@@ -23,3 +23,5 @@ __pycache__/
 *.txt
 *.json
 *.dump
+
+*.pickle

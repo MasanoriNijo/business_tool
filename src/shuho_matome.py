@@ -86,12 +86,16 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = ""):
     return nippo
                 
 # テキスト記入
-def append_text_to_file(text, filename):
+def append_text_to_file(text, filename, msg = False):
     try:
         # 'a' モードでファイルを開く（ファイルがなければ作成される）
         with open(filename, 'a') as file:
             file.write(text + '\n')  # 指定されたテキストを追記
         # print(f"'{text}' has been appended to {filename}.")
+        
+        if msg:
+            print(f"書き込み完了:path {filename}")
+
     except IOError as e:
         # 入出力エラーをキャッチ
         print(f"An I/O error occurred: {e}")
@@ -172,7 +176,7 @@ def main(username, password, keyword_regex, n_days_ago = 7):
         # append_text_to_file(nippoTxt, "nippou_xxx.txt")
         
     nippoTxt = exportDataRecursive(nippo)
-    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_MATOME_FILE']}")
+    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_MATOME_FILE']}", True)
     
     # 4. 抽出されたテキストをAIでまとめる
     # ai_summary = ai_summarize_texts(extracted_texts)

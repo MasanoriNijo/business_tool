@@ -71,7 +71,7 @@ def main():
         
         print(extracted_text)
     body = f"\n本日の業務を開始します。\n\n開始:{current_time} -\n\n{extracted_text}\n\n▼その他\n・チケット発生都度対応"
-    create_draft(email_account = EMAIL_ACCOUNT, password = PASSWORD, subject = subject, body = body, imap_server = IMAP_SERVER, imap_port = IMAP_PORT)
+    create_draft(EMAIL_ACCOUNT, subject, body)
 
 if __name__ == "__main__":
     if len(sys.argv) > 1:

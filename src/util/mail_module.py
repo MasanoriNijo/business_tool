@@ -171,11 +171,11 @@ def list_folders(email_account, email_password, imap_server, imap_port):
         print(f"エラーが発生しました: {e}")
         
 # Gmailへ下書きを作成する。
-def create_draft(email_account, subject, body):    
+def create_draft(email_account, subject, body, mail_to = 'k@s-cubism.jp, d_system_support@s-cubism.jp'):    
     # メールの作成
     msg = MIMEMultipart()
     msg['From'] = email_account
-    msg['To'] = 'k@s-cubism.jp, d_system_support@s-cubism.jp'  # 宛先
+    msg['To'] = mail_to  # 宛先
     msg['Subject'] = subject
 
     # メール本文を追加

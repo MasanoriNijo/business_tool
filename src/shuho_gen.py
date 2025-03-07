@@ -11,6 +11,7 @@ import ssl
 import pytz
 import copy
 import subprocess
+from datetime import datetime
 from util.mail_module import connect_to_email_server, filter_emails_by_subject, extract_text_from_email, create_draft
 
 from util.config_reader import load_config
@@ -159,12 +160,13 @@ def exchange_text_to_nippo(mailTxt, nippo = {}, date = "", finRegex = "xxxx_nasi
     return nippo
                 
 # テキスト記入
-def append_text_to_file(text, filename):
+def append_text_to_file(text, filename, msgFlg = False):
     try:
         # 'a' モードでファイルを開く（ファイルがなければ作成される）
         with open(filename, 'a') as file:
             file.write(text + '\n')  # 指定されたテキストを追記
-        # print(f"'{text}' has been appended to {filename}.")
+        if msgFlg:
+            print(f"テキスト保存しました。 {filename}")
     except IOError as e:
         # 入出力エラーをキャッチ
         print(f"An I/O error occurred: {e}")
@@ -190,16 +192,14 @@ def exportDataRecursive(nippo, outTxt:str = '', lvl:int = 0):
     return outTxt
 
 # AI要約用の関数
-def ai_summarize_texts(texts, max_length=150):
-    summarizer = pipeline("summarization")  # Hugging Faceの要約パイプライン
-    combined_text = " ".join(texts)  # すべてのメール本文を結合
+# def ai_summarize_texts(texts, max_length=150):
+#     summarizer = pipeline("summarization")  # Hugging Faceの要約パイプライン
+#     combined_text = " ".join(texts)  # すべてのメール本文を結合
     
-    # 要約を実行（モデルは長すぎる入力を処理できないため、適切な長さに制限）
-    summary = summarizer(combined_text, max_length=max_length, min_length=30, do_sample=False)
+#     # 要約を実行（モデルは長すぎる入力を処理できないため、適切な長さに制限）
+#     summary = summarizer(combined_text, max_length=max_length, min_length=30, do_sample=False)
     
-    return summary[0]['summary_text']
-
-from datetime import datetime
+#     return summary[0]['summary_text']
 
 # 指定の日付x月y日が今日から何日前かを計算 
 def days_ago(x, y, same_year = True, endFlg = False):
@@ -392,7 +392,7 @@ def main(username, password, draftMade):
         nippoTxt = exportDataRecursive(nippo)
 
     nippoTxt = exportDataRecursive(nippo)
-    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_MATOME_FILE']}")
+    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_MATOME_FILE']}", True)
     
     if draftMade == 0:
         print("Text出力しました。")
@@ -409,7 +409,7 @@ def main(username, password, draftMade):
     subject = f"【週報】{current_month}月第X週 二條 {before_date}～{current_date} 週報"
     body = f"\n今週の週報を送付します。\n\n〇トピックス\n・特になし\n\n〇案件状況報告\n{nippoTxt}\n〇BackLog実績\n"
     red_pattern = r"→.*@@@"
-    create_draft(subject, body, red_pattern)
+    create_draft(username, subject, body)
 
 if __name__ == "__main__":
     # Gmailのユーザ名とアプリパスワード（Googleで2段階認証が有効の場合に必要）

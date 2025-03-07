@@ -181,7 +181,7 @@ def main(username, password, keyword_regex, n_days_ago = 7):
         # append_text_to_file(nippoTxt, "nippou_xxx.txt")
         
     nippoTxt = exportDataRecursive(nippo)
-    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_MATOME_FILE']}")
+    append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['NIPPO_MATOME_FILE']}", True)
     
     # 4. 抽出されたテキストをAIでまとめる
     # ai_summary = ai_summarize_texts(extracted_texts)

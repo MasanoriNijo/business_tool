@@ -32,7 +32,7 @@ class Nippo:
             if startFlg:
                 matchedFlg = False    
                 for ind_ in range(4):
-                    match = re.match("^" + komokuRegexs[ind_] + "(.*)",mltxt)
+                    match = re.match("^" + komokuRegexs[ind_] + "(.*)", mltxt)
                     if match:
                         matchedFlg = True        
                         if ind < ind_ and ind_ < 3:
@@ -40,7 +40,7 @@ class Nippo:
                             ind += 1
                         elif ind == ind_:
                             # 追加する。
-                                 
+
                             self._buf_add_to_nippo(buf, biko)
                             # bufを戻す。
                             buf.pop()
@@ -75,9 +75,12 @@ class Nippo:
     # テキストの内容を成型してデータ構造として保持する。
     def _buf_add_to_nippo(self, buf, biko = ""):
         # 追加する。
-        buf_ = copy.deepcopy(buf)      
+        buf_ = copy.deepcopy(buf)
         while len(buf_) < 3:
             buf_.append("N")  
+        buf_[0] = buf_[0].replace("　", " ")
+        buf_[1] = buf_[1].replace("　", " ")
+        buf_[2] = buf_[2].replace("　", " ")
         if buf_[0] not in self.data:
             self.data[buf_[0]] = {}
         if buf_[1] not in self.data[buf_[0]]:

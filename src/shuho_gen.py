@@ -409,7 +409,7 @@ def main(username, password, draftMade):
     subject = f"【週報】{current_month}月第X週 二條 {before_date}～{current_date} 週報"
     body = f"\n今週の週報を送付します。\n\n〇トピックス\n・特になし\n\n〇案件状況報告\n{nippoTxt}\n〇BackLog実績\n"
     red_pattern = r"→.*@@@"
-    create_draft(username, subject, body)
+    create_draft(username, subject, body, "")
 
 if __name__ == "__main__":
     # Gmailのユーザ名とアプリパスワード（Googleで2段階認証が有効の場合に必要）

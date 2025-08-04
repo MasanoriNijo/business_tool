@@ -41,9 +41,10 @@ $ python3 gen_table_structure.py
 4, 以下のコマンドで、出力させるデータを対話型処理で逐次実行
 
 // 作業ファイルを初期化する。
-$ echo '' > src\mysql\file\work.txt
+$ echo '' > src/mysql/file/work.txt
 
 // 以下のコマンドを逐次実行
+$ cd src/mysql/
 $ python3 serch_table_relation.py <table_name>
 
 処理の流れ
@@ -99,6 +100,10 @@ gzip -d ishigro_stg_orange_pos_stock_item_partial.20241209.dump.gz*
 gzip -d ishigro_stg_orange_pos_stock_transaction_item_partial.20241209.dump.gz*      
 gzip -d ishigro_stg_orange_pos_supplier_product_partial.20241209.dump.gz*
 
+以下のSQLのところを
+INSERT INTO
+以下に変える。
+INSERT IGNORE INTO 
 
 mysql -u root -pabcABC123@ orange_pos <
 

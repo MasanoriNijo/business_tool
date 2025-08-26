@@ -28,3 +28,5 @@ __pycache__/
 *.png
 
 .vagrant
+
+mandc-ecorange/

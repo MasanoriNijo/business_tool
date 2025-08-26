@@ -60,6 +60,9 @@ mysql> select pos_transaction_item_id from pos_transaction_item order by updated
 +----------------------------+
 1 rows in set (x.xx sec)
 
+mysqlの実行結果を逐次workに書き込み、繰り返し以下を実行する。
+$ python3 serch_table_relation.py <table_name>
+
 
 完了すると以下にselect where 文が記述される。
 書き込み完了:path C:/Users/masanori.nijo/Documents/chatGpt/src/mysql/file/dump_where.txt
@@ -69,8 +72,13 @@ mysql> select pos_transaction_item_id from pos_transaction_item order by updated
 mysqldump -u admin -h stg-ishiguro-db01.crx3rtja2ldw.ap-northeast-1.rds.amazonaws.com -p --skip-lock-tables --no-tablespaces --no-create-info --set-gtid-purged=OFF --single-transaction --tables orange_pos stock_transaction_item --where="stock_transaction_item_id IN ('01JCN1YQJQ6R1D3SE3RY9F87MR', '01JDH1CTQCAV4R198VYB5KHDTP', '01JCFV29X9MDZ2PS981YMEC1XB', '01J9B1X3TJYF7T11EAR6MQGDXR', '01JD65VV83VDVWXQKEV9VGDAJG', '01JCFV29ZYNK1662P1W9SF15BE', '01JD6WVQ7Q2TAW46JVR5CNS14C', '01JD65DGYZDQMG1SYFMWKF738G', '01JCMC85XM5S56CTP45EMJH27N', '01JCF87ZQ4ZT51DD34M0A6SCJA', '01JD655RWZS43QW1EVC96DQCGR', '01JCFVRFPMAK294D7M1314PX3P', '01JCF87ZMWVZ4E5ZF6RJCHTVG3') " | gzip > ishigro_stg_orange_pos_stock_transaction_item_partial.$(date +%Y%m%d).dump.gz
 ps: :X<tlZ~*3ajI$7!e2jO_[]zAN#fG
 
+$ mkdir tmp_20241205
+$ mv <xxx.20241205.dump.gz> tmp_20241205
+// 固める
 $ tar -cvzf tmp_20241205.tar.gz tmp_20241205/
 
+// 上記をscpコマンド等で、ローカルに取りだして、ローカル仮想環境へ移動させる。
+// ローカル環境内で解凍する。
 $ tar -xvzf archive.tar.gz
 
 

@@ -23,6 +23,7 @@ Vagrant.configure("2") do |config|
   # admin
   config.vm.synced_folder "./src", "/var/www/src", create:"true", mount_options: ["dmode=777","fmode=777"], type: "virtualbox"
   config.vm.synced_folder "mandc-ecorange", "/var/www/sc-framework", create:"true", mount_options: ["dmode=777","fmode=777"], type: "virtualbox"
+  config.vm.synced_folder "passport-sample", "/var/www/passport-sample", create:"true", mount_options: ["dmode=777","fmode=777"], type: "virtualbox"
 
   end
   

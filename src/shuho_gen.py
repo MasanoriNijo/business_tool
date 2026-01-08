@@ -189,6 +189,8 @@ def exportDataRecursive(nippo, outTxt:str = '', lvl:int = 0):
                 outTxt += points[lvl]
                 outTxt += value
                 outTxt += '\n'
+            elif value == "N" and lvl == 2:
+                outTxt = outTxt.rstrip('\n')
     return outTxt
 
 # AI要約用の関数
@@ -365,9 +367,8 @@ def main(username, password, draftMade):
     nippo = exchange_text_to_nippo(shuho_text, nippo, "", fin_regex)
 
     # 4. 日報を取得
-    
     keyword_regex = "^Re: 【勤怠連絡】.*"
-    n_days_ago = 7 # 前回の週報の作成日から本日までの日数、便宜上7(一週間前)
+    n_days_ago = 7 # 前回の週報の作成日から本日までの日数、デフォルトで便宜上、7(一週間前)
     
     shuhoSubjectRegex = "^【週報】\d{1,2}月第\d週 \S+ \d{1,2}月\d{1,2}日\(.\)～(\d{1,2})月(\d{1,2})日\(.\) 週報$"
     match = re.match(shuhoSubjectRegex,subject[0]) # 【週報】9月第2週 二條 9月6日(金)～9月12日(木) 週報
@@ -389,8 +390,8 @@ def main(username, password, draftMade):
             date = " (" + match[1].strip() + ")@@@" # @@@は後処理のメール下書きに成型時の赤文字に変換するための目印。
         fin_regex = "\d{4}年\d{1,2}月\d{1,2}日\([日月火水木金土]\) \d{1,2}:\d{1,2}" # 2024年9月12日(木) 10:43 二條正則 <masanori.nijo@s-cubism.jp>: のところで終わりにする。
         nippo = exchange_text_to_nippo(extracted_text, nippo, date, fin_regex)
-        nippoTxt = exportDataRecursive(nippo)
 
+    print(nippo)
     nippoTxt = exportDataRecursive(nippo)
     append_text_to_file(nippoTxt, f"{config['SRC_TO_OUT_PATH']}/{config['SYUHO_MATOME_FILE']}", True)
     

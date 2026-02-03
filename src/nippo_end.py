@@ -1,11 +1,11 @@
-import imaplib
-import email
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+# import imaplib
+# import email
+# from email.mime.text import MIMEText
+# from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-import ssl
-import pytz
-import sys
+# import ssl
+# import pytz
+# import sys
 import re
 from util.config_reader import load_config
 from util.mail_module import connect_to_gmail, connect_to_email_server, filter_emails_by_subject, extract_text_from_email

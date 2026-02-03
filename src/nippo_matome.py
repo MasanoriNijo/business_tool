@@ -1,9 +1,9 @@
 from transformers import pipeline
-import imaplib
-import email
-from email.header import decode_header
+# import imaplib
+# import email
+# from email.header import decode_header
 import re
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
 import sys
 import copy
 import subprocess

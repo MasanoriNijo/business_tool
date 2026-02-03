@@ -9,7 +9,7 @@ from datetime import datetime
 import re
 from util.config_reader import load_config
 from util.mail_module import connect_to_gmail, connect_to_email_server, filter_emails_by_subject, extract_text_from_email
-from util.backlog_module import fetch_backlog_tickets, fetch_backlog_comments, summarize_tickets, invert_dicｔ, remove_empty_lines
+from util.backlog_module import fetch_backlog_tickets, fetch_backlog_comments, summarize_tickets, invert_dicｔ, remove_empty_lines, tmpSwapKeyword, restoreSwapKeyword
 from util.nippo import Nippo
 from util.file_text_module import save_text_to_file
 import subprocess
@@ -79,6 +79,10 @@ def main():
     # backlogの当日の情報を取得
     backlogTxt = ""
     projects = invert_dict(PROJECT_DICT)
+    
+    targetKeys = ["▼","・","→"]
+    swapKeys = ["@▼▼@","@・・@","@→→@"]
+    
     for name, projectIds in projects.items():
         backlogTxt += f"▼{name}\n"
         for project_id in projectIds:
@@ -93,10 +97,10 @@ def main():
                 backlogTxt += f"・{ticket_key} {summary['summary']}\n"
                 for date, comment in summary['comments'].items():
                     backlogTxt +=f"→{date}:\n"
-                    backlogTxt +=f"{remove_empty_lines(comment)}\n"
+                    backlogTxt +=f"{tmpSwapKeyword(remove_empty_lines(comment), targetKeys, swapKeys)}\n"
 
     nippo.addTxt(backlogTxt)
-    body += nippo.exportText()
+    body += restoreSwapKeyword(nippo.exportText(), targetKeys, swapKeys)
     
     save_text_to_file(body,"../out/nippo_end.txt")
 

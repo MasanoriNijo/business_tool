@@ -135,3 +135,16 @@ def invert_dict(input_dict):
     sorted_inverted_dict = {k.decode('utf_8'): [v.decode('utf_8') for v in inverted_dict[k]] for k in sorted(inverted_dict)}
 
     return sorted_inverted_dict
+
+# 一時的に文字を置換する。
+def tmpSwapKeyword(txt, targetKeys, swapKeys):
+    for ind, targetKey in enumerate(targetKeys):
+        txt = txt.replace(targetKey, swapKeys[ind])       
+    return txt
+
+# 一時的に置換した文字を元に戻す。
+def restoreSwapKeyword(txt, targetKeys, swapKeys):
+    for ind, swapKey in enumerate(swapKeys):
+        txt = txt.replace(swapKey, targetKeys[ind])
+    return txt
+
